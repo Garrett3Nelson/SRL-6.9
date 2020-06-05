@@ -1264,29 +1264,28 @@ begin
 end;
 
 (*
-waitCollectSlot
+waitSlotComplete
 ---------------
 
 .. code-block:: pascal
 
-    function TRSGrandExchange.waitCollectSlot(geSlot, maxTime: integer): boolean;
+    function TRSGrandExchange.waitSlotComplete(geSlot, maxTime: integer): boolean;
 
-Returns true if it collects coins and/or items from the completed or aborted slot
-**geSlot** . Waits up to **maxTime** for **geSlot** to finish selling.
+Returns true if the slot is complete during the wait time.
 
 .. note::
 
-    - by The Mayor
-    - Last Updated: 12 March 2015 by The Mayor
+    - by 3Garrett3
+    - Last Updated: 4 June 2020 by 3Garrett3
 
 Example:
 
 .. code-block:: pascal
 
-    grandExchange.waitCollectSlot(2, 60000); // Wait up to 1 minute to collect slot 2
+    grandExchange.waitSlotComplete(2, 60000); // Wait up to 1 minute for slot 2 to complete
 
 *)
-function TRSGrandExchange.waitCollectSlot(geSlot, maxTime: Integer): boolean;
+function TRSGrandExchange.waitSlotComplete(geSlot, maxTime: Integer): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
   timeOut: UInt64;
@@ -1303,16 +1302,44 @@ begin
 
   while (GetTickCount() < timeOut) do
     if self.__isSlotComplete(geSlot) then
-    begin
-      if self.collectSlot(geSlot) then
-      begin
-        result := true;
-        break();
-      end;
-    end else
-      wait(500);
+      exit(true)
+    else
+      wait(randomRange(250,500));
+end;
 
-  print('TRSGrandExchange.waitCollectSlot(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result), TDebug.SUB);
+(*
+waitCollectSlot
+---------------
+
+.. code-block:: pascal
+
+    function TRSGrandExchange.waitCollectSlot(geSlot, maxTime: integer): boolean;
+
+Returns true if it collects coins and/or items from the completed or aborted slot
+**geSlot** . Waits up to **maxTime** for **geSlot** to finish selling.
+
+.. note::
+
+    - by The Mayor
+    - Last Updated: 4 June 2020 by 3Garrett3
+
+Example:
+
+.. code-block:: pascal
+
+    grandExchange.waitCollectSlot(2, 60000); // Wait up to 1 minute to collect slot 2
+
+*)
+function TRSGrandExchange.waitCollectSlot(geSlot, maxTime: Integer): boolean;
+var
+  TBA: TBoxArray := self.__getSlotBoxes();
+  timeOut: UInt64;
+begin
+  if self.waitSlotComplete(geSlot, maxTime) then
+    if self.collectSlot(geSlot) then
+      exit(true)
+  else
+    print('TRSGrandExchange.waitCollectSlot(): Slot did not complete', TDebug.WARNING);
 end;
 
 (*
@@ -1352,6 +1379,95 @@ begin
 end;
 
 (*
+__clickAbort
+-----------
+
+.. code-block:: pascal
+
+    function TRSGrandExchange.__clickAbort(): boolean;
+
+Used internally to click on the abort X in the slot. Returns true if it finds the red bar
+
+.. note::
+
+    - by 3Garrett3
+    - Last Updated: 4 June 2020 by 3Garrett3
+
+Example:
+
+.. code-block:: pascal
+
+    if grandExchange.__clickAbort() then
+      // Do whatever with the aborted offer
+
+*)
+
+function TRSGrandExchange.__clickAbort() : boolean;
+var
+  abortButton: TPoint := [self.x1 + 412, self.y1 + 373];
+  redBox: TBox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
+begin
+  multiClick(abortButton.rand(5), 30, 3);
+  result := waitColorCountRange(1048714, 5, redBox, 4000, 2000);
+end;
+
+(*
+quickAbort
+-----------
+
+.. code-block:: pascal
+
+    function TRSGrandExchange.quickAbort(collect : boolean = false; return : boolean = false; useHotkey : boolean = false) : boolean;
+
+Aborts the offer when we are already in the offer screen. Note that only collect or return can be true.
+Collect overrides return.
+
+.. note::
+
+    - by 3Garrett3
+    - Last Updated: 4 June 2020 by 3Garrett3
+
+Example:
+
+.. code-block:: pascal
+
+    if grandExchange.quickAbort(true, false, true) then
+      // input a new offer
+
+*)
+
+function TRSGrandExchange.quickAbort(collect : boolean = false; return : boolean = false; useHotkey : boolean = false) : boolean;
+begin
+  if not self.isOpen() then
+  begin
+    print('TRSGrandExchange.quickAbort(): Cannot abort as the GE is not open', TDebug.ERROR);
+    exit(false);
+  end;
+
+  if not self.__isProgressOpen() then
+  begin
+    print('TRSGrandExchange.quickAbort(): Cannot quick abort because progress screen is not open. Use regulat abortSlot()', TDebug.ERROR);
+    exit(false);
+  end;
+
+  if not self.__clickAbort() then
+  begin
+    print('TRSGrandExchange.quickAbort(): Clicking abort failed', TDebug.ERROR);
+    exit(false);
+  end;
+
+  if collect then
+    result := self.collectSlot(0, useHotkey) // use 0 as the slot because it is already open
+  else if return then
+  begin
+    self.__returnToSummary(useHotKey);
+    result := (not self.__isProgressOpen());
+  end else
+    result := true;
+    // If we clicked the abort button above, then we're done if we aren't collecting or returning to main screen
+end;
+
+(*
 abortSlot
 ---------
 
@@ -1365,7 +1481,7 @@ set to true it will also collect the items and gold from the aborted offer.
 .. note::
 
     - by The Mayor
-    - Last Updated: 20 May 2020 by 3Garrett3
+    - Last Updated: 4 June 2020 by 3Garrett3
 
 Example:
 
@@ -1378,8 +1494,6 @@ Example:
 function TRSGrandExchange.abortSlot(geSlot: integer; collect: boolean = true; useHotkey : boolean = false): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
-  abortButton: TPoint := [self.x1 + 412, self.y1 + 373];
-  redBox: TBox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
 begin
   if not self.isOpen() then
   begin
@@ -1413,15 +1527,18 @@ begin
     exit(false);
   end else
   begin
-    multiClick(abortButton.rand(5), 30, 3);
-    waitColorCountRange(1048714, 5, redBox, 4000, 2000);
+    if not self.__clickAbort() then
+    begin
+      print('TRSGrandExchange.abortSlot(): Clicking abort button failed', TDebug.ERROR);
+      exit(false);
+    end;
 
     if collect then
       result := self.collectSlot(geSlot, useHotkey)
     else
     begin
-      result := self.__isSlotAborted(geSlot);
       self.__returnToSummary(useHotkey);
+      result := self.__isSlotAborted(geSlot);
     end;
   end;
 
@@ -1725,7 +1842,7 @@ var
 begin
   if not self.isOpen() then
   begin
-    print('TRSGrandExchange.sellItem(): Cannot abort as the GE is not open', TDebug.ERROR);
+    print('TRSGrandExchange.buyItem(): Cannot buy item as the GE is not open', TDebug.ERROR);
     exit(false);
   end;
 
@@ -1740,7 +1857,7 @@ begin
 
   if nextSlot < 1 then
   begin
-    print('TRSGrandExchange.sellItem(): Cannot sell item as there are no empty offer slots', TDebug.ERROR);
+    print('TRSGrandExchange.buyItem(): Cannot buy item as there are no empty offer slots', TDebug.ERROR);
     exit(false);
   end;
 
