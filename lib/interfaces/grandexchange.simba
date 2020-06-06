@@ -563,6 +563,7 @@ function TRSGrandExchange.__isOfferOpen(waitTime: integer = 500): boolean;
 var
   timeOut: UInt64;
   TPA: TPointArray;
+  confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
 begin
   timeOut := GetTickCount() + waitTime;
 
@@ -570,8 +571,20 @@ begin
     if findColors(TPA, 6247745, self.getBounds()) then // Changed to look for blue outline
     begin
       if (length(TPA) = 2862) then // Changed count
-        exit(true);
+      begin
+        result := True;
+        break;
+      end else
+        // If we are hovering an item (sell offer) the count may be off, check for confirm button
+        if countColorTolerance(2270960, confirm, 22, colorSetting(2, 0.11, 0.48)) > 1500 then
+        begin
+          result := True;
+          break;
+        end;
+      wait(randomRange(150,350));
     end;
+
+  print('TRSGrandExchange.isOfferOpen() = ' + boolToStr(result), TDebug.SUB);
 end;
 {$ENDIF}
 
@@ -602,6 +615,7 @@ function TRSGrandExchange.__isProgressOpen(waitTime: integer = 500): boolean;
 var
   timeOut: integer;
   TPA: TPointArray;
+  backSpace: TBox := [self.x1 + 15, self.y2 - 46, self.x1 + 49, self.y2 - 22];
 begin
   timeOut := GetTickCount() + waitTime;
 
@@ -609,6 +623,14 @@ begin
     if findColors(TPA, 6247745, self.getBounds()) then
     begin
       if (length(TPA) = 3501) then
+      begin
+        result := True;
+        break;
+      end else
+      // Detects the back button - Note that this will return true for Progress or Offer
+      // Only required when hovering something (abort button for example) and the
+      // Outline of the slot is covered
+      if countColorTolerance(10462127, backSpace, 25, colorSetting(2, 0.20, 0.30)) > 200 then
       begin
         result := True;
         break;
@@ -902,6 +924,10 @@ var
   inputBox: TBoxArray;
   amountBox: TBoxArray := grid(4, 1, 34, 24, 44, 0, point(self.x1 + 84, self.y1 + 298));
 begin
+  if quantity = '-1' then
+    exit();
+  // If we don't want to press any button (ie sell all noted items) enter -1
+
   strArr := ['1', '10', '100', 'all'];
 
   i := strArr.returnInArray(lowercase(quantity));
@@ -1001,15 +1027,22 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function TRSGrandExchange.__enterName(itemName: string): boolean;
 const
-  TESS_FILTER_GE_CHARS: TTesseractFilter = [4, 4, [False, 18, TM_Mean]];
+  TESS_FILTER_GE_CHARS: TTesseractFilter = [5, 5, [False, 15, TM_Mean]];
+  TESS_FILTER_GE_CHARS_BACKUP: TTesseractFilter = [3, 4, [False, 18, TM_Mean]];
 var
   i: integer;
   timeOut: UInt64;
+  itemBox : TBox := [self.x1 + 81, self.y1 + 170, self.x2 - 647, self.y2 - 347]; // The box for the item icon
   resultsBox: TBoxArray := grid(3, 2, 164, 49, 170, 55, point(self.x1+105, self.y1 + 410)); // Updated box locations
   resultsTextBox: TBoxArray := grid(3, 2, 122, 38, 170, 55, point(self.x1 + 122, self.y1 + 410)); // Updated box locations
   inputBox: TBoxArray;
+  tName, tName2, TESS_WHITELIST: String;
+  textCol : integer := 7759429;
+  textTol : integer := 18;
+  textCTS : tColorSettings := [2, [0.02, 0.54]];
+  textTPA : tPointArray;
+  textBox : tBox;
 begin
-  timeOut := GetTickCount() + randomRange(3000, 4000);
   inputBox := self.__getInputBoxes();
 
   if not self.__findInsertionCursor(inputBox[2]) then
@@ -1020,13 +1053,33 @@ begin
 
   if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then // Updated colors
     for i := 0 to 5 do
-      if (stringMatch(trim(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS)), itemName) >= 0.75) or
-      containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75) then
+    // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
+    // Returns false positives (ie big bones are true when the text is bones)
+    begin
+      findColorsTolerance(textTPA, textCol, resultsTextBox[i], textTol, textCTS);
+      textBox := textTPA.getBounds();
+      textBox.edit(-2, -2, 2, 2);
+
+      TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
+      tName := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
+      tName2 := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
+      //print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
+      if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
       begin
         mouseBox(resultsBox[i], MOUSE_LEFT);
-        waitColorCountRange(16777215, 3, inputBox[2], randomRange(5000, 6000), 507, 509);
+        timeOut := GetTickCount() + randomRange(3000, 4000);
+        while getPixelShift(itemBox, 200) > 0 do // The flashing yellow icon before searching goes solid after the item clicks
+        begin
+          wait(randomRange(100,250));
+          if getTickCount() > timeOut then
+          begin
+            print('No item appeared after clicking result.', tDebug.ERROR);
+            exit(false);
+          end;
+        end;
         exit(true);
       end;
+    end;
 
   print('TRSGrandExchange.__enterName(): Found no matches for item: ' + itemName, TDebug.SUB);
 end;
@@ -1112,6 +1165,8 @@ begin
   for i := 1 to length(TBA) do
     if self.__isSlotEmpty(i) then
       inc(result);
+
+  print('TRSGrandExchange.countFreeSlots(): Counted ' + toStr(result), TDebug.DEBUG);
 end;
 
 {*
@@ -1147,6 +1202,8 @@ begin
   for i := 1 to length(TBA) do
     if self.__isSlotActive(i) then
       inc(result);
+
+  print('TRSGrandExchange.countActiveSlots(): Counted ' + toStr(result), TDebug.DEBUG);
 end;
 
 (*
@@ -1233,6 +1290,7 @@ var
   timeOut: UInt64;
   i: integer;
 begin
+  print('TRSGrandExchange.collectSlot(): Beginning collection', TDebug.HEADER);
   if not self.__isProgressOpen() then
   begin
     self.__returnToSummary(useHotkey);
@@ -1302,9 +1360,14 @@ begin
 
   while (GetTickCount() < timeOut) do
     if self.__isSlotComplete(geSlot) then
+    begin
+      print('TRSGrandExchange.waitCollectSlot(): Slot is complete', TDebug.SUB);
       exit(true)
-    else
+    end else
       wait(randomRange(250,500));
+
+      // If we get here, the slot has not completed
+  print('TRSGrandExchange.waitCollectSlot(): Slot is not complete', TDebug.SUB);
 end;
 
 (*
@@ -1533,6 +1596,8 @@ begin
       exit(false);
     end;
 
+    wait(randomRange(550,800));
+
     if collect then
       result := self.collectSlot(geSlot, useHotkey)
     else
@@ -1711,6 +1776,7 @@ before collecting the resulting gold.
 
   The **quantity** parameter is a string - valid options are:
 
+    * '-1'              : Presses no button (which sells all noted items)
     * '1'               : '1' button
     * '10'              : '10' button
     * '100'             : '100' button
