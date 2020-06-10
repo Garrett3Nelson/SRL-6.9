@@ -1150,6 +1150,32 @@ begin
   print('TPlayer.login(): ' + toStr(result), TDebug.FOOTER);
 end;
 
+function __clickLogoutConfirmation(timeout : integer): boolean
+var
+  buttonTPA : tPointArray;
+  ATPA : T2DPointArray;
+  t : Integer;
+begin
+  t := getSystemTime();
+  while (length(buttonTPA) < 1000) do
+  begin
+    findColorsTolerance(buttonTPA, 2270960, options.getBounds(), 22, colorSetting(2, 0.11, 0.48));
+    if ((getSystemTime() - t) > timeout) then
+    begin
+      print('tPlayer.logout: Could not find confirm button', tDebug.ERROR);
+      exit(false);
+    end;
+    wait(randomRange(100,200));
+  end;
+
+  buttonTPA.sortFromPoint(point(options.x1, options.y2));
+  ATPA := buttonTPA.toATPA(150, 20);
+  ATPA.sortbySize();
+
+  mouseBox(ATPA[0].getBounds(), MOUSE_LEFT);
+  result := true;
+end;
+
 (*
 logout
 ------
@@ -1189,7 +1215,7 @@ begin
   if options.open() then
   begin
     options.selectOption(['Logout', 'ogout', 'gout']);
-
+    __clickLogoutConfirmation(2000);
     t := (getSystemTime() + (7000));
 
     repeat

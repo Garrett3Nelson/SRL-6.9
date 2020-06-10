@@ -86,7 +86,7 @@ begin
     ID := ID_INTERFACE_OPTIONS;
     parentID := -1;
     isStatic := true;
-    setBounds(IntToBox(300, 95, 499, 469));
+    setBounds(IntToBox(277, 267, 746, 500));
   end;
 end;
 {$ENDIF}
