@@ -564,6 +564,7 @@ var
   timeOut: UInt64;
   TPA: TPointArray;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
+  backSpace: TBox := [self.x1 + 15, self.y2 - 46, self.x1 + 49, self.y2 - 22];
 begin
   timeOut := GetTickCount() + waitTime;
 
@@ -576,11 +577,19 @@ begin
         break;
       end else
         // If we are hovering an item (sell offer) the count may be off, check for confirm button
-        if countColorTolerance(2270960, confirm, 22, colorSetting(2, 0.11, 0.48)) > 1500 then
-        begin
-          result := True;
-          break;
-        end;
+      if countColorTolerance(2270960, confirm, 22, colorSetting(2, 0.11, 0.48)) > 1500 then
+      begin
+        result := True;
+        break;
+      end else
+      // Detects the back button - Note that this will return true for Progress or Offer
+      // Only required when hovering something (abort button for example) and the
+      // Outline of the slot is covered
+      if countColorTolerance(10462127, backSpace, 25, colorSetting(2, 0.20, 0.30)) > 200 then
+      begin
+        result := True;
+        break;
+      end;
       wait(randomRange(150,350));
     end;
 
@@ -739,7 +748,7 @@ function TRSGrandExchange.__isSlotComplete(geSlot: integer): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
-  result := (countColorTolerance(1999423, TBA[geSlot - 1], 17) > 1450);
+  result := (countColorTolerance(1999423, TBA[geSlot - 1], 17) > 1250);
   print('TRSGrandExchange.isSlotComplete(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result), TDebug.SUB);
 end;
 {$ENDIF}
@@ -799,13 +808,14 @@ Example:
 
 *}
 {$IFNDEF CODEINSIGHT}
-function TRSGrandExchange.__isSlotBuying(geSlot: integer): boolean;
+function TRSGrandExchange.__isSlotBuying(geSlot: integer; overrideComplete : Boolean = false): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
   TPA, TPA2: TPointArray;
 begin
-  if self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)
-    then exit(false);
+  if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) and (not overrideComplete) then
+    exit(false);
+
   findColors(TPA, 3091496, TBA[geSlot - 1]); // Changed colors
   findColors(TPA2, 4407613, TBA[geSlot - 1]); // If hovering the box
   TPA.combine(TPA2);
@@ -837,13 +847,14 @@ Example:
 
 *}
 {$IFNDEF CODEINSIGHT}
-function TRSGrandExchange.__isSlotSelling(geSlot: integer): boolean;
+function TRSGrandExchange.__isSlotSelling(geSlot: integer; overrideComplete : Boolean = false): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
   TPA, TPA2: TPointArray;
 begin
-  if self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)
-    then exit(false);
+  if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) and (not overrideComplete) then
+    exit(false);
+
   findColors(TPA, 3287837, TBA[geSlot - 1]);
   findColors(TPA2, 4603955, TBA[geSlot - 1]); // If hovering the box
   TPA.combine(TPA2);
@@ -1260,6 +1271,14 @@ begin
   print('TRSGrandExchange.__openSlot(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result));
 end;
 
+function TRSGrandExchange.isOfferComplete() : Boolean; // Checks for completion bar on open offer
+var
+  progressBar: TBox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
+begin
+  result := (countColorTolerance(1999423, progressBar, 17) > 1450);
+  print('TRSGrandExchange.isOfferComplete(): ' + boolToStr(result), TDebug.SUB);
+end;
+
 (*
 collectSlot
 -----------
@@ -1590,6 +1609,12 @@ begin
     exit(false);
   end else
   begin
+    if self.isOfferComplete() then
+    begin
+      print('TRSGrandExchange.abortSlot(): Offer has completed');
+      exit(false);
+    end;
+
     if not self.__clickAbort() then
     begin
       print('TRSGrandExchange.abortSlot(): Clicking abort button failed', TDebug.ERROR);
