@@ -120,7 +120,7 @@ var
   b: TBox;
 begin
   b := IntToBox(Self.X1, Self.Y1, Self.X2, Self.Y1 + 30);
-  Result := (CountColorTolerance(631756, b, 70, ColorSetting(1)) > 300);
+  Result := (CountColorTolerance(758468, b, 11, colorSetting(2, 0.11, 1.08)) > 325);
 end;
 {$ENDIF}
 

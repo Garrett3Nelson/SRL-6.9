@@ -813,8 +813,9 @@ var
   TBA: TBoxArray := self.__getSlotBoxes();
   TPA, TPA2: TPointArray;
 begin
-  if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) and (not overrideComplete) then
-    exit(false);
+  if not overrideComplete then
+    if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) then
+      exit(false);
 
   findColors(TPA, 3091496, TBA[geSlot - 1]); // Changed colors
   findColors(TPA2, 4407613, TBA[geSlot - 1]); // If hovering the box
@@ -852,8 +853,9 @@ var
   TBA: TBoxArray := self.__getSlotBoxes();
   TPA, TPA2: TPointArray;
 begin
-  if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) and (not overrideComplete) then
-    exit(false);
+  if not overrideComplete then
+    if (self.__isSlotAborted(geSlot) or self.__isSlotComplete(geSlot)) then
+      exit(false);
 
   findColors(TPA, 3287837, TBA[geSlot - 1]);
   findColors(TPA2, 4603955, TBA[geSlot - 1]); // If hovering the box
@@ -1129,14 +1131,15 @@ begin
   begin
     print('TRSGrandExchange._returnToSummary(): returning to summary screen', TDebug.SUB);
 
-    if not useHotkey then
-      multiClick(backButton.rand(5), 30, 3)
-    else
-      typeByte(VK_BACK); // Added backspace hotkey
-
     timeOut := GetTickCount() + randomRange(2500, 3500);
     while GetTickCount() < timeOut do
     begin
+      if not useHotkey then
+        multiClick(backButton.rand(5), 30, 3)
+      else
+        typeByte(VK_BACK); // Added backspace hotkey
+      wait(randomRange(500, 750));
+
       if ((not self.__isOfferOpen()) and (not self.__isProgressOpen())) then
         break();
     end;
@@ -1258,7 +1261,7 @@ begin
 
   repeat
     case useHotkey of
-      True: SendKeys(toStr(geSlot), 50, 25);
+      True: SendKeys(toStr(geSlot), 175, 50);
       False: mouseBox(TBA[geSlot - 1], MOUSE_LEFT);
     end;
     if self.__isProgressOpen(2000 + random(500)) then
@@ -1302,12 +1305,13 @@ Example:
     grandExchange.collectSlot(2);
 
 *)
-function TRSGrandExchange.collectSlot(geSlot: integer; useHotkey : boolean = False): boolean;  // Added useHotkey
+function TRSGrandExchange.collectSlot(geSlot: integer; useHotkey : boolean = False; noted : boolean = False): boolean;  // Added useHotkey
 var
   TBA: TBoxArray := self.__getSlotBoxes();
   collectBox: TBoxArray := grid(2, 1, 37, 32, 49, 0, point(self.x1 + 463, self.y1 + 385));
   timeOut: UInt64;
-  i: integer;
+  i : integer;
+  gotNoted : Boolean;
 begin
   print('TRSGrandExchange.collectSlot(): Beginning collection', TDebug.HEADER);
   if not self.__isProgressOpen() then
@@ -1325,8 +1329,20 @@ begin
     for  0 to 2 do // Attempt up to 3 times in case of lag
       if isItemIn(collectBox[i]) then
       begin
-        mouseBox(collectBox[i], MOUSE_LEFT);
-        wait(randomRange(750, 1250));
+        case (noted and (not gotNoted)) of
+          True:
+            begin
+              mouseBOX(collectbox[i], MOUSE_RIGHT);
+              if chooseOption.isOpen(1500) then
+                if chooseOption.optionsExist(['note', 'Collect-note', 'ect-no', '-not']) then
+                  gotNoted := chooseOption.select(['note', 'Collect-note', 'ect-no', '-not'])
+                else
+                  gotNoted := chooseOption.select(['Collect ', 'lect', 'ollec'])
+                  // This is if the item is non-notable
+            end;
+          False: mouseBox(collectBox[i], MOUSE_LEFT);
+        end;
+        wait(randomRange(1250, 1750));
 
         if not self.__isProgressOpen() then
         begin
@@ -1744,7 +1760,7 @@ Example:
 *)
 function TRSGrandExchange.getPercentDone(geSlot: integer): integer;
 begin
-  result := round(0.6462 * self.__getProgressCount(geSlot)); // Moved counting to separate function
+  result := round(100 * (1/154) * self.__getProgressCount(geSlot)); // Moved counting to separate function
 end;
 
 (*
@@ -1777,7 +1793,7 @@ Example:
 *)
 function TRSGrandExchange.getPercentDone(geSlot: integer): Extended; overload;
 begin
-  result := 0.6462 * self.__getProgressCount(geSlot);
+  result := (1/154) * self.__getProgressCount(geSlot);
 end;
 
 (*

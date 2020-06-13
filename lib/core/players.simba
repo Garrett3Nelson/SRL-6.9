@@ -800,7 +800,11 @@ begin
     print('Responding with action: ' + errorMessage[3], TDebug.SUB);
 
     case errorMessage[3] of
-      'Terminate': terminateScript();
+      'Terminate':
+        begin
+          takeScreenshot('terminating.png');
+          terminateScript();
+        end;
       'Set_World': self.world := -1;
 
       'Next_Player_F':
