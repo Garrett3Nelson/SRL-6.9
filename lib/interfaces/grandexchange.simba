@@ -1064,6 +1064,7 @@ begin
   if self.__findInsertionCursor(inputBox[2]) then
     typeSend(itemName, false);
 
+  mouseBox([self.x1, self.y1, self.x2, inputBox[2].y1], MOUSE_MOVE);
   if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then // Updated colors
     for i := 0 to 5 do
     // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
@@ -1071,12 +1072,12 @@ begin
     begin
       findColorsTolerance(textTPA, textCol, resultsTextBox[i], textTol, textCTS);
       textBox := textTPA.getBounds();
-      textBox.edit(-2, -2, 2, 2);
+      textBox.edit(-3, -3, 3, 3);
 
       TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
       tName := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
       tName2 := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
-      //print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
+      print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
       if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
       begin
         mouseBox(resultsBox[i], MOUSE_LEFT);
@@ -1715,7 +1716,7 @@ Example:
 *)
 function TRSGrandExchange.__getProgressCount(geSlot: integer): integer;
 const
-  BG_COLORS = [2500653, 1974051, 2565929, 2039584];
+  BG_COLORS = [2500653, 1974051, 2565929, 2039584, 3092529, 2434598];
 var
   i, x, y: integer;
   TBA: TBoxArray := self.__getSlotBoxes();
@@ -1843,7 +1844,7 @@ Example:
     grandExchange.sellItem(1, '1500', '100', true, 20000);
 
 *)
-function TRSGrandExchange.sellItem(packSlot: integer; price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000): boolean;
+function TRSGrandExchange.sellItem(packSlot: integer; price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000; slotNumber : Integer = -1): boolean;
 var
   i, nextSlot: integer;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
@@ -1856,17 +1857,22 @@ begin
 
   self.__returnToSummary();
 
-  for i := 1 to 8 do
-    if self.__isSlotEmpty(i) and self.__isSlotActive(i) then
-    begin
-      nextSlot := i;
-      break();
-    end;
-
-  if nextSlot < 1 then
+  if slotNumber = -1 then
   begin
-    print('TRSGrandExchange.sellItem(): Cannot sell item as there are no empty offer slots', TDebug.ERROR);
-    exit(false);
+    print('TRSGrandExchange.sellItem(): Detecting next open slot number', TDebug.SUB);
+    for i := 1 to 8 do
+      if self.__isSlotEmpty(i) and self.__isSlotActive(i) then
+      begin
+        nextSlot := i;
+        print('TRSGrandExchange.sellItem(): Creating an offer in slot number ' + toStr(nextSlot), TDebug.SUB);
+        break();
+      end;
+
+    if nextSlot < 1 then
+    begin
+      print('TRSGrandExchange.buyItem(): Cannot buy item as there are no empty offer slots', TDebug.ERROR);
+      exit(false);
+    end;
   end;
 
   if isItemIn(self.getPackSlotBox(packSlot)) then
@@ -1879,8 +1885,8 @@ begin
 
   if self.__isOfferOpen(3000) then
   begin
-    self.__enterQuantity(quantity);
     self.__enterPrice(price);
+    self.__enterQuantity(quantity);
     mouseBox(confirm, MOUSE_LEFT);
 
 
@@ -1939,7 +1945,7 @@ Example:
     grandExchange.buyItem('Oak log', '150', '10000', true, 20000);
 
 *)
-function TRSGrandExchange.buyItem(itemName, price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000): boolean;
+function TRSGrandExchange.buyItem(itemName, price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000; slotNumber : Integer = -1): boolean;
 var
   i, nextSlot, x, y: integer;
   b: TBox;
@@ -1955,27 +1961,34 @@ begin
 
   self.__returnToSummary();
 
-  for i := 1 to 8 do
-    if self.__isSlotEmpty(i) and self.__isSlotActive(i) then
-    begin
-      nextSlot := i;
-      break();
-    end;
-
-  if nextSlot < 1 then
+  if slotNumber = -1 then
   begin
-    print('TRSGrandExchange.buyItem(): Cannot buy item as there are no empty offer slots', TDebug.ERROR);
-    exit(false);
-  end;
+    print('TRSGrandExchange.buyItem(): Detecting next open slot number', TDebug.SUB);
+    for i := 1 to 8 do
+      if self.__isSlotEmpty(i) and self.__isSlotActive(i) then
+      begin
+        nextSlot := i;
+        print('TRSGrandExchange.buyItem(): Creating an offer in slot number ' + toStr(nextSlot), TDebug.SUB);
+        break();
+      end;
+
+    if nextSlot < 1 then
+    begin
+      print('TRSGrandExchange.buyItem(): Cannot buy item as there are no empty offer slots', TDebug.ERROR);
+      exit(false);
+    end;
+  end else
+    nextSlot := slotNumber;
 
   mouseBox(TBA[nextSlot - 1], MOUSE_LEFT);
 
   if self.__isOfferOpen(3000) then
     if self.__enterName(itemName) then
     begin
-      self.__enterQuantity(quantity);
       self.__enterPrice(price);
-      mouseBox(confirm, MOUSE_LEFT);
+      self.__enterQuantity(quantity);
+      if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 3000, 1000, 5000) then
+        mouseBox(confirm, MOUSE_LEFT);
       wait(randomRange(1000, 1500));
     end else
       self.__returnToSummary();
