@@ -1327,7 +1327,7 @@ begin
   end;
 
   for i := high(collectBox) downto 0 do
-    for  0 to 2 do // Attempt up to 3 times in case of lag
+    for  0 to 4 do // Attempt up to 3 times in case of lag
       if isItemIn(collectBox[i]) then
       begin
         case (noted and (not gotNoted)) of
