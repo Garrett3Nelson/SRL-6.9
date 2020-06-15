@@ -536,6 +536,48 @@ begin
 end;
 {$ENDIF}
 
+
+{*
+__getAbortBoxes
+---------------
+
+.. code-block:: pascal
+
+    function TRSGrandExchange.__getAbortBoxes(): TBoxArray;
+
+Returns a TBoxArray of the Grand Exchange abort boxes on the mainscreen
+
+.. note::
+
+    - by 3Garrett3
+    - Last Updated: 15 June 2020 by 3Garrett3
+
+Example:
+
+.. code-block:: pascal
+
+    tba := grandExchange.__getAbortBoxes();
+
+*}
+
+{$IFNDEF CODEINSIGHT}
+function TRSGrandExchange.__getAbortBoxes(): TBoxArray;
+const
+  __BUTTON_OFFSET: TPoint = [175, 156]; // From self(x1, y1) to middle of first buy button
+var
+  tba: TBoxArray;
+begin
+  if not self.isOpen() then
+  begin
+    print('TRSGrandExchange.__getBuyBoxes(): Cannot click a buy box as the GE is not open', TDebug.ERROR);
+    exit();
+  end;
+  tba := grid(3, 3, 17, 17, 177, 128, point(self.x1 + __BUTTON_OFFSET.x, self.y1 + __BUTTON_OFFSET.y));
+  tba.deleteIndex(8);
+  result := tba;
+end;
+{$ENDIF}
+
 {*
 __isOfferOpen
 -------------
@@ -571,7 +613,7 @@ begin
   while (GetTickCount() < timeOut) do
     if findColors(TPA, 6247745, self.getBounds()) then // Changed to look for blue outline
     begin
-      if (length(TPA) = 2862) then // Changed count
+      if (length(TPA) = 2862) or (length(TPA) = 952) then //Sell count is 2862, Buy is 952 with search box open
       begin
         result := True;
         break;
@@ -780,7 +822,7 @@ function TRSGrandExchange.__isSlotAborted(geSlot: integer): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
-  result := (countColorTolerance(983163, TBA[geSlot - 1], 16) > 1700);
+  result := (countColorTolerance(1048714, TBA[geSlot - 1], 1) > 1500);
   print('TRSGrandExchange.isSlotAborted(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result), TDebug.SUB);
 end;
 {$ENDIF}
@@ -993,9 +1035,9 @@ var
   strArr : TStringArray;
   priceBox, inputBox: TBoxArray;
 begin
-  priceBox := grid(3, 1, 34, 24, 45, 0, point(self.x1 + 367, self.y1 + 298));
+  priceBox := grid(5, 1, 34, 24, 45, 0, point(self.x1 + 322, self.y1 + 298));
 
-  strArr := ['-5', 'mid', '+5'];
+  strArr := ['-20', '-5', 'mid', '+5', '+20'];
 
   i := strArr.returnInArray(lowercase(price));
 
@@ -1043,11 +1085,11 @@ const
   TESS_FILTER_GE_CHARS: TTesseractFilter = [5, 5, [False, 15, TM_Mean]];
   TESS_FILTER_GE_CHARS_BACKUP: TTesseractFilter = [3, 4, [False, 18, TM_Mean]];
 var
-  i: integer;
+  i, beforeBMP, afterBMP: integer;
   timeOut: UInt64;
   itemBox : TBox := [self.x1 + 81, self.y1 + 170, self.x2 - 647, self.y2 - 347]; // The box for the item icon
-  resultsBox: TBoxArray := grid(3, 2, 164, 49, 170, 55, point(self.x1+105, self.y1 + 410)); // Updated box locations
-  resultsTextBox: TBoxArray := grid(3, 2, 122, 38, 170, 55, point(self.x1 + 122, self.y1 + 410)); // Updated box locations
+  resultsBox: TBoxArray := grid(3, 4, 160, 49, 168, 55, point(self.x1+104, self.y1 + 285)); // Updated box locations // Updated box locations
+  resultsTextBox: TBoxArray := grid(3, 4, 119, 38, 168, 55, point(self.x1 + 121, self.y1 + 285)); // Updated box locations
   inputBox: TBoxArray;
   tName, tName2, TESS_WHITELIST: String;
   textCol : integer := 7759429;
@@ -1058,15 +1100,15 @@ var
 begin
   inputBox := self.__getInputBoxes();
 
-  if not self.__findInsertionCursor(inputBox[2]) then
-    mouseBox(inputBox[2], MOUSE_LEFT);
+  if not self.__findInsertionCursor(inputBox[0]) then
+    mouseBox(inputBox[0], MOUSE_LEFT);
 
-  if self.__findInsertionCursor(inputBox[2]) then
+  if self.__findInsertionCursor(inputBox[0]) then
     typeSend(itemName, false);
 
-  mouseBox([self.x1, self.y1, self.x2, inputBox[2].y1], MOUSE_MOVE);
+  mouseBox([self.x1, self.y1, self.x2, inputBox[0].y1], MOUSE_MOVE);
   if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then // Updated colors
-    for i := 0 to 5 do
+    for i := 0 to high(resultsTextBox) do
     // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
     // Returns false positives (ie big bones are true when the text is bones)
     begin
@@ -1080,17 +1122,25 @@ begin
       print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
       if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
       begin
+        beforeBMP := bitmapFromClient(itemBox);
         mouseBox(resultsBox[i], MOUSE_LEFT);
+        afterBMP := bitmapFromClient(itemBox);
         timeOut := GetTickCount() + randomRange(3000, 4000);
-        while getPixelShift(itemBox, 200) > 0 do // The flashing yellow icon before searching goes solid after the item clicks
+        while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // The flashing yellow icon before searching goes solid after the item clicks
         begin
           wait(randomRange(100,250));
+          afterBMP := bitmapFromClient(itemBox);
           if getTickCount() > timeOut then
           begin
-            print('No item appeared after clicking result.', tDebug.ERROR);
+            print('TRSGrandExchange.__enterName(): No item appeared after clicking result.', tDebug.ERROR);
+            freeBitmap(beforeBMP);
+            freeBitmap(afterBMP);
             exit(false);
           end;
         end;
+        print('TRSGrandExchange.__enterName(): Clicked name successfully.');
+        freeBitmap(beforeBMP);
+        freeBitmap(afterBMP);
         exit(true);
       end;
     end;
@@ -1466,11 +1516,11 @@ Example:
 *)
 procedure TRSGrandExchange.collectAllSlots(toInventory: boolean = true);
 const
-  _OFFSET: TPoint = [653, 481];
+  _OFFSET: TPoint = [653, 483];
 var
   TBA: TBoxArray;
 begin
-  TBA := grid(1, 2, 180, 20, 0, 36, point(self.x1 + _OFFSET.x, self.y1 + _OFFSET.y));
+  TBA := grid(1, 2, 180, 24, 0, 34, point(self.x1 + _OFFSET.x, self.y1 + _OFFSET.y));
   case ToInventory of
     true: multiClick(TBA[0].getMiddle().rand(5), 25, 3);
     false: multiClick(TBA[1].getMiddle().rand(5), 25, 3);
@@ -1501,13 +1551,27 @@ Example:
 
 *)
 
-function TRSGrandExchange.__clickAbort() : boolean;
+function TRSGrandExchange.__clickAbort(geSlot : Integer = 0; onMS : Boolean = False) : boolean;
 var
-  abortButton: TPoint := [self.x1 + 412, self.y1 + 373];
-  redBox: TBox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
+  abortButton: TPoint;
+  redBox: TBox;
+  minRange : Integer;
 begin
+  if onMS then
+  begin
+    abortButton := self.__getAbortBoxes()[geSlot-1].getGaussPoint();
+    redBox := self.__getSlotBoxes()[geSlot-1];
+    redBox.edit(8, 93, -8, -16);
+    minRange := 1500;
+  end else
+  begin
+    abortButton := [self.x1 + 412, self.y1 + 373];   // On an open offer
+    redbox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
+    minRange := 2000;
+  end;
+
   multiClick(abortButton.rand(5), 30, 3);
-  result := waitColorCountRange(1048714, 5, redBox, 4000, 2000);
+  result := waitColorCountRange(1048714, 5, redBox, 4000, minRange);
 end;
 
 (*
@@ -1590,7 +1654,7 @@ Example:
     grandExchange.abortSlot(2, false); // To leave items in the aborted offer slot
 
 *)
-function TRSGrandExchange.abortSlot(geSlot: integer; collect: boolean = true; useHotkey : boolean = false): boolean;
+function TRSGrandExchange.abortSlot(geSlot: integer; collect: boolean = true; useHotkey : boolean = false; fromMS : Boolean = True): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
@@ -1620,19 +1684,21 @@ begin
     exit(false);
   end;
 
-  if not self.__openSlot(geSlot, useHotkey) then   // Added opening function
+  if (not fromMS) and (not self.__openSlot(geSlot, useHotkey)) then   // Added opening function
   begin
+
     print('TRSGrandExchange.abortSlot(): Cannot abort as offer slot ' + toStr(geSlot) + ' couldnt be opened', TDebug.ERROR);
     exit(false);
   end else
   begin
-    if self.isOfferComplete() then
+
+    if (not fromMS) and self.isOfferComplete() then
     begin
       print('TRSGrandExchange.abortSlot(): Offer has completed');
       exit(false);
     end;
 
-    if not self.__clickAbort() then
+    if not self.__clickAbort(geSlot, fromMS) then
     begin
       print('TRSGrandExchange.abortSlot(): Clicking abort button failed', TDebug.ERROR);
       exit(false);
