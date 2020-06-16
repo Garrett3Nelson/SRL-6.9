@@ -1078,12 +1078,12 @@ var
 begin
   priceBox := grid(5, 1, 34, 24, 45, 0, point(self.x1 + 322, self.y1 + 298));
 
-  if (price[1] = '+') or (price[1] = '-') then
+  if (price[1] = '+') or (price[1] = '-') then // This block calculates if we can click multiple buttons to achieve the price
   begin
-    modifier := strtoInt(copy(price, 1, length(price)))
+    modifier := strtoInt(copy(price, 1, length(price)));
     if modifier mod 5 <> 0 then
     begin
-      print('tRSGrandExchange.__enterPrice(): When using +/- you must specify a multiple of 5, received' + price, tDebug.ERROR);
+      print('tRSGrandExchange.__enterPrice(): When using +/- you must specify a multiple of 5, instead you passed ' + price, tDebug.ERROR);
       exit();
     end;
 
@@ -1170,6 +1170,11 @@ var
   textTPA : tPointArray;
   textBox : tBox;
 begin
+  while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
+    wait(50);                                          // There is a fancy loading animation where the search box slides up before the slot is ready
+
+  wait(randomRange(300,600));
+
   inputBox := self.__getInputBoxes();
 
   if not self.__findInsertionCursor(inputBox[0]) then
@@ -1194,11 +1199,12 @@ begin
       print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
       if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
       begin
-        beforeBMP := bitmapFromClient(itemBox);
+        beforeBMP := bitmapFromClient(itemBox); // Takes a screenshot of the item icon (empty)
         mouseBox(resultsBox[i], MOUSE_LEFT);
-        afterBMP := bitmapFromClient(itemBox);
+        afterBMP := bitmapFromClient(itemBox);  // This is re-calculated to check for when the icon appears
+
         timeOut := GetTickCount() + randomRange(3000, 4000);
-        while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // The flashing yellow icon before searching goes solid after the item clicks
+        while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // Waits for the icon to show up in the slot
         begin
           wait(randomRange(100,250));
           afterBMP := bitmapFromClient(itemBox);
@@ -1210,6 +1216,11 @@ begin
             exit(false);
           end;
         end;
+
+        // If we didn't timeout above we're now successfully ready for price and quantity updates
+        while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
+          wait(50);                                          // There is another animation where the search box slides down to reveal the price/quantity
+
         print('TRSGrandExchange.__enterName(): Clicked name successfully.');
         freeBitmap(beforeBMP);
         freeBitmap(afterBMP);
@@ -2057,6 +2068,7 @@ the resulting gold and items.
     * '+5'              : 5% above mid price button
     * '-20'             : 20% below mid price button
     * '+20'             : 20% above mid price button
+    * Any multiple      : It will click the above buttons multiple times. +40 will click 20% twice.
     * Any other number  : It will enter the price
 
   The **quantity** parameter is a string - valid options are:
