@@ -85,7 +85,7 @@ begin
     name := 'RS Options Menu';
     ID := ID_INTERFACE_OPTIONS;
     parentID := -1;
-    isStatic := true;
+    isStatic := false;
     setBounds(IntToBox(277, 267, 746, 500));
   end;
 end;
@@ -105,7 +105,7 @@ Scripters should use options.isOpen() below.
 .. note::
 
     - by Coh3n
-    - Last Updated: 23 July 2013 by Coh3n
+    - Last Updated: 18 June 2020 by 3Garrett3
 
 Example:
 
@@ -117,10 +117,36 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function TRSOptions.__find(): Boolean;
 var
+  i: Integer;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
   b: TBox;
 begin
-  b := IntToBox(Self.X1, Self.Y1, Self.X2, Self.Y1 + 30);
-  Result := (CountColorTolerance(758468, b, 11, colorSetting(2, 0.11, 1.08)) > 325);
+  findColorsTolerance(TPA, 2441064, getClientBounds(), 10, colorSetting(2, 0.13, 0.88));
+
+  if length(TPA) < 1000 then
+  begin
+    print('TRSOptions.__find(): Didn''t find brown bar', TDebug.WARNING);
+    exit(false);
+  end;
+
+  ATPA := TPA.cluster(5);
+  ATPA.sortBySize(true);
+
+  for i := 0 to high(ATPA) do
+  begin
+    b := ATPA[i].getBounds();
+
+    if inRange(b.getWidth(), 425, 500) and inRange(b.getHeight(), 20, 30) then
+    begin
+      if (pos('OPTIONS', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+      begin
+        self.setBounds([b.x1, b.y1 - 3, b.x2, b.y1 + 226]);
+        exit(true);
+      end;
+    end;
+  end;
+  print('TRSOptions.__find(): Could not find the options interface', TDebug.WARNING);
 end;
 {$ENDIF}
 
