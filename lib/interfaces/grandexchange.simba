@@ -1080,7 +1080,7 @@ begin
 
   if (price[1] = '+') or (price[1] = '-') then // This block calculates if we can click multiple buttons to achieve the price
   begin
-    modifier := strtoInt(copy(price, 1, length(price)));
+    modifier := strtoInt(copy(price, 2, length(price)));
     if modifier mod 5 <> 0 then
     begin
       print('tRSGrandExchange.__enterPrice(): When using +/- you must specify a multiple of 5, instead you passed ' + price, tDebug.ERROR);
@@ -1195,19 +1195,23 @@ begin
 
       TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
       tName := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
+      tName := replace(tName, chr(10), " ", [rfReplaceAll]);
+      tName := replace(tName, chr(13), " ", [rfReplaceAll]);
+
       tName2 := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
+      tName2 := replace(tName2, chr(10), " ", [rfReplaceAll]);
+      tName2 := replace(tName2, chr(13), " ", [rfReplaceAll]);
       print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
       if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
       begin
-        beforeBMP := bitmapFromClient(itemBox); // Takes a screenshot of the item icon (empty)
+        beforeBMP := bitmapFromClient(itemBox);
+        setBitmapName(beforeBMP, 'beforeBMP'); // Takes a screenshot of the item icon (empty)
         mouseBox(resultsBox[i], MOUSE_LEFT);
         afterBMP := bitmapFromClient(itemBox);  // This is re-calculated to check for when the icon appears
-
+        setBitmapName(afterBMP, 'afterBMP');
         timeOut := GetTickCount() + randomRange(3000, 4000);
         while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // Waits for the icon to show up in the slot
         begin
-          wait(randomRange(100,250));
-          afterBMP := bitmapFromClient(itemBox);
           if getTickCount() > timeOut then
           begin
             print('TRSGrandExchange.__enterName(): No item appeared after clicking result.', tDebug.ERROR);
@@ -1215,6 +1219,11 @@ begin
             freeBitmap(afterBMP);
             exit(false);
           end;
+
+          wait(randomRange(100,250));
+          freeBitmap(afterBMP);
+          afterBMP := bitmapFromClient(itemBox);
+          setBitmapName(afterBMP, 'afterBMP');
         end;
 
         // If we didn't timeout above we're now successfully ready for price and quantity updates
