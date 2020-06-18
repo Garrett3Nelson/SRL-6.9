@@ -1115,6 +1115,12 @@ var
 begin
   print('TPlayer.login()', TDebug.HEADER);
 
+  if not self.isActive then
+  begin
+    print('TPlayer.login(): Player ' + self.nickname + ' is not active', TDebug.SUB);
+    exit(False);
+  end;
+
   repeat
     if isLoggedIn() then
     begin

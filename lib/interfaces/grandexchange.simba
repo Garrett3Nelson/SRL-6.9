@@ -1284,7 +1284,8 @@ begin
       wait(randomRange(500, 750));
 
       if ((not self.__isOfferOpen()) and (not self.__isProgressOpen())) then
-        break();
+        break()
+      else if useHotKey then useHotkey := False;
     end;
   end;
 end;
@@ -1411,7 +1412,8 @@ begin
     begin
       result := True;
       break();
-    end;
+    end else
+      if useHotkey then useHotKey := False; // Set it false if it failed once
   until (GetTickCount() < timeOut);
 
   print('TRSGrandExchange.__openSlot(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result));

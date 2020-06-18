@@ -185,6 +185,8 @@ begin
       result := true;
       break();
     end;
+
+    wait(randomRange(75, 150));
   until (getSystemTime() >= t);
 
   print('TRSOptions.isOpen() result: ' + boolToStr(result));
