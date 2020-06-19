@@ -1233,6 +1233,7 @@ begin
         print('TRSGrandExchange.__enterName(): Clicked name successfully.');
         freeBitmap(beforeBMP);
         freeBitmap(afterBMP);
+        wait(randomRange(350,500)); // Slight lag on the price/quantity boxes being ready
         exit(true);
       end;
     end;
@@ -1278,7 +1279,7 @@ begin
     while GetTickCount() < timeOut do
     begin
       if not useHotkey then
-        multiClick(backButton.rand(5), 30, 2)
+        mouse(backButton.rand(5), MOUSE_LEFT)
       else
         typeByte(VK_ESCAPE); // Added escape hotkey
       wait(randomRange(500, 750));
@@ -1670,8 +1671,9 @@ begin
       minRange := 1000;
     end;
 
-    multiClick(abortButton.rand(5), 25, 2);
+    mouse(abortButton.rand(5), MOUSE_LEFT);
     result := waitColorCountRange(1048714, 5, redBox, 2000, minRange);
+    if result then break;
   end;
 end;
 
@@ -1883,15 +1885,23 @@ Example:
 *)
 function TRSGrandExchange.__getProgressCount(geSlot: integer): integer;
 const
-  BG_COLORS = [2500653, 1974051, 2565929, 2039584, 3092529, 2434598];
+  BG_COLORS = [2500653, 1974051, 2565929, 2039584, 3092529, 2434598, 3026997];
 var
-  i, x, y: integer;
+  i, x, y, hoverCount: integer;
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
   if self.__isSlotEmpty(geSlot) or (not self.__isSlotActive(geSlot)) then exit(-1);
 
   x := TBA[geSlot -1].x1 + 8;
   y := TBA[geSlot -1].y1 + 100;
+  hoverCount := countColor(1710618, TBA[geSlot -1].x1 + 8, TBA[geSlot -1].y1 + 100, TBA[geSlot -1].x2 - 8, TBA[geSlot -1].y1 + 110);
+
+  if hoverCount > 0 then // We are hovering and obscuring the bar
+  begin
+    print('tRSGrandExchange.__getProgressCount(): hoverCount = ' + toStr(hoverCount));
+    mouseBox(intToBox(0,0,self.x2, self.y1), MOUSE_MOVE);
+    wait(randomRange(100,200));
+  end;
 
   for result := 0 to 153 do
     for i := 0 to high(BG_COLORS) do
