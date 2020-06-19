@@ -831,7 +831,7 @@ function TRSGrandExchange.__isSlotComplete(geSlot: integer): boolean;
 var
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
-  result := (countColorTolerance(1999423, TBA[geSlot - 1], 17) > 1250);
+  result := (countColorTolerance(1999423, TBA[geSlot - 1], 17) > 750);
   print('TRSGrandExchange.isSlotComplete(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result), TDebug.SUB);
 end;
 {$ENDIF}
@@ -1278,14 +1278,17 @@ begin
     while GetTickCount() < timeOut do
     begin
       if not useHotkey then
-        multiClick(backButton.rand(5), 30, 3)
+        multiClick(backButton.rand(5), 30, 2)
       else
-        typeByte(VK_BACK); // Added backspace hotkey
+        typeByte(VK_ESCAPE); // Added escape hotkey
       wait(randomRange(500, 750));
 
       if ((not self.__isOfferOpen()) and (not self.__isProgressOpen())) then
         break()
       else if useHotKey then useHotkey := False;
+
+      mouseBox(self.getBounds(), MOUSE_MOVE);
+      wait(randomRange(250,400));
     end;
   end;
 end;
@@ -1649,23 +1652,27 @@ function TRSGrandExchange.__clickAbort(geSlot : Integer = 0; onMS : Boolean = Fa
 var
   abortButton: TPoint;
   redBox: TBox;
-  minRange : Integer;
+  minRange, t : Integer;
 begin
-  if onMS then
+  t := getSystemTime() + 5000;
+  while getSystemTime() < t do
   begin
-    abortButton := self.__getAbortBoxes()[geSlot-1].getGaussPoint();
-    redBox := self.__getSlotBoxes()[geSlot-1];
-    redBox.edit(8, 93, -8, -16);
-    minRange := 1500;
-  end else
-  begin
-    abortButton := [self.x1 + 412, self.y1 + 373];   // On an open offer
-    redbox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
-    minRange := 2000;
-  end;
+    if onMS then
+    begin
+      abortButton := self.__getAbortBoxes()[geSlot-1].getGaussPoint();
+      redBox := self.__getSlotBoxes()[geSlot-1];
+      redBox.edit(8, 93, -8, -16);
+      minRange := 750;
+    end else
+    begin
+      abortButton := [self.x1 + 412, self.y1 + 373];   // On an open offer
+      redbox := [self.x1 + 29, self.y1 + 394, self.x1 + 423, self.y1 + 400];
+      minRange := 1000;
+    end;
 
-  multiClick(abortButton.rand(5), 30, 3);
-  result := waitColorCountRange(1048714, 5, redBox, 4000, minRange);
+    multiClick(abortButton.rand(5), 25, 2);
+    result := waitColorCountRange(1048714, 5, redBox, 2000, minRange);
+  end;
 end;
 
 (*

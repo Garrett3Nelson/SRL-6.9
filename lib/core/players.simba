@@ -1167,7 +1167,7 @@ var
   t : Integer;
 begin
   t := getSystemTime();
-  while (length(buttonTPA) < 1000) do
+  while (length(buttonTPA) < 500) do
   begin
     findColorsTolerance(buttonTPA, 2270960, options.getBounds(), 22, colorSetting(2, 0.11, 0.48));
     if ((getSystemTime() - t) > timeout) then
