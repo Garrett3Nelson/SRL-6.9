@@ -164,7 +164,11 @@ begin
       if (pos('GRAND', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
       begin
         self.setBounds([b.x1 - 88, b.y1 - 8, b.x2 + 570, b.y2 + 515]);
-        self.tabBoxes := grid(3, 1, 60, 22, 107, 0, point(x1 + 92, y1 + 113));
+        setLength(self.tabBoxes, 4);
+        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 96, self.x1 + 156, self.y1+ 124]; // Grand Exchange
+        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 96, self.x1 + 262, self.y1+ 124]; // History
+        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 96, self.x1 + 336, self.y1+ 124]; // Sets
+        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 96, self.x1 + 437, self.y1+ 124]; // Favourites
         exit(true);
       end;
     end;
@@ -306,7 +310,7 @@ var
   i: Integer;
 begin
   for i := 0 to high(self.tabBoxes) do
-    if (not (getColor(self.tabBoxes[i].X2, self.tabBoxes[i].Y2) = 9078134)) then
+    if (not(getColor(round((self.tabBoxes[i].X1+self.tabBoxes[i].X2)/2), self.tabBoxes[i].Y2) = 8881013)) then
       exit(i);
 end;
 {$ENDIF}
@@ -1893,8 +1897,8 @@ begin
   if self.__isSlotEmpty(geSlot) or (not self.__isSlotActive(geSlot)) then exit(-1);
 
   x := TBA[geSlot -1].x1 + 8;
-  y := TBA[geSlot -1].y1 + 100;
-  hoverCount := countColor(1710618, TBA[geSlot -1].x1 + 8, TBA[geSlot -1].y1 + 100, TBA[geSlot -1].x2 - 8, TBA[geSlot -1].y1 + 110);
+  y := TBA[geSlot -1].y1 + 93;
+  hoverCount := countColor(1710618, TBA[geSlot -1].x1 + 8, TBA[geSlot -1].y1 + 93, TBA[geSlot -1].x2 - 8, TBA[geSlot -1].y1 + 105);
 
   if hoverCount > 0 then // We are hovering and obscuring the bar
   begin
