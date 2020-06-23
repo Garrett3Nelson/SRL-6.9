@@ -1040,8 +1040,9 @@ begin
     mouseBox(inputBox[0], MOUSE_LEFT);
     if self.__findInsertionCursor(inputBox[0]) then
     begin
+      wait(randomRange(150,250));
       typeSend(toStr(quantity), true);
-      wait(randomRange(1000, 1500));
+      wait(randomRange(1250, 1500));
     end;
   end;
 end;
@@ -1124,8 +1125,9 @@ begin
       mouseBox(inputBox[1], MOUSE_LEFT);
       if self.__findInsertionCursor(inputBox[1]) then
       begin
+        wait(randomRange(150,250));
         typeSend(toStr(price), true);
-        wait(randomRange(1000, 1500));
+        wait(randomRange(1250, 1500));
       end;
     end;
   end;
@@ -2169,9 +2171,11 @@ begin
     begin
       self.__enterPrice(price);
       self.__enterQuantity(quantity);
-      if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 3000, 1000, 5000) then
+      if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
+      begin
         mouseBox(confirm, MOUSE_LEFT);
-      wait(randomRange(1000, 1500));
+        wait(randomRange(1000, 1500));
+      end;
     end else
       self.__returnToSummary();
 
