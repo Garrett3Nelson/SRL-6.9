@@ -1022,17 +1022,17 @@ var
   i: integer;
   strArr : TStringArray;
   inputBox: TBoxArray;
-  amountBox: TBoxArray := grid(4, 1, 34, 24, 44, 0, point(self.x1 + 84, self.y1 + 298));
+  amountBox: TBoxArray := grid(5, 1, 34, 24, 45, 0, point(self.x1 + 60, self.y1 + 298));
 begin
   if quantity = '-1' then
     exit();
   // If we don't want to press any button (ie sell all noted items) enter -1
 
-  strArr := ['1', '10', '100', 'all'];
+  strArr := ['1', '10', '100', 'all', 'lim'];
 
   i := strArr.returnInArray(lowercase(quantity));
 
-  if inRange(i, 0, 3) then
+  if inRange(i, 0, 4) then
     mouseBox(amountBox[i], MOUSE_LEFT)
   else
   begin
@@ -1163,18 +1163,20 @@ const
   TESS_FILTER_GE_CHARS: TTesseractFilter = [5, 5, [False, 15, TM_Mean]];
   TESS_FILTER_GE_CHARS_BACKUP: TTesseractFilter = [3, 4, [False, 18, TM_Mean]];
 var
-  i, beforeBMP, afterBMP: integer;
+  i, beforeBMP, afterBMP, textIndex : integer;
   timeOut: UInt64;
   itemBox : TBox := [self.x1 + 81, self.y1 + 170, self.x2 - 647, self.y2 - 347]; // The box for the item icon
   resultsBox: TBoxArray := grid(3, 4, 160, 49, 168, 55, point(self.x1+104, self.y1 + 285)); // Updated box locations // Updated box locations
   resultsTextBox: TBoxArray := grid(3, 4, 119, 38, 168, 55, point(self.x1 + 121, self.y1 + 285)); // Updated box locations
   inputBox: TBoxArray;
-  tName, tName2, TESS_WHITELIST: String;
+  tempText, TESS_WHITELIST: String;
+  tNameArr, tNameArr2 : TStringArray;
   textCol : integer := 7759429;
   textTol : integer := 18;
   textCTS : tColorSettings := [2, [0.02, 0.54]];
   textTPA : tPointArray;
   textBox : tBox;
+  bestMatch : Extended;
 begin
   while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
     wait(50);                                          // There is a fancy loading animation where the search box slides up before the slot is ready
@@ -1184,65 +1186,92 @@ begin
   inputBox := self.__getInputBoxes();
 
   if not self.__findInsertionCursor(inputBox[0]) then
+  begin
     mouseBox(inputBox[0], MOUSE_LEFT);
+    wait(randomRange(125,250));
+  end;
 
   if self.__findInsertionCursor(inputBox[0]) then
     typeSend(itemName, false);
 
   mouseBox([self.x1, self.y1, self.x2, inputBox[0].y1], MOUSE_MOVE);
-  if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then // Updated colors
+  if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then
+  begin // Updated colors
     for i := 0 to high(resultsTextBox) do
     // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
     // Returns false positives (ie big bones are true when the text is bones)
+    // Here we generate an array with all possible results. Then we will sort for the best match
     begin
       findColorsTolerance(textTPA, textCol, resultsTextBox[i], textTol, textCTS);
+      if length(textTPA) = 0 then break(); // We've reached the end of results
+
       textBox := textTPA.getBounds();
-      textBox.edit(-3, -3, 3, 3);
+      textBox.edit(-4, -4, 3, 3); // Tesseract works better with some empty space around text
 
+      // Create a custom whitelist of letters, any numbers that are in the name, and any special chars like (/,)
       TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
-      tName := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
-      tName := replace(tName, chr(10), " ", [rfReplaceAll]);
-      tName := replace(tName, chr(13), " ", [rfReplaceAll]);
 
-      tName2 := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
-      tName2 := replace(tName2, chr(10), " ", [rfReplaceAll]);
-      tName2 := replace(tName2, chr(13), " ", [rfReplaceAll]);
-      print('TRSGrandExchange.__enterName(): At slot '+ toStr(i) + ': ' + tName + ' AND ' + tName2, TDebug.DEBUG);
-      if (stringMatch(lowerCase(tName), lowerCase(itemName)) >= 0.8) or (stringMatch(lowerCase(tName2), lowerCase(itemName)) >= 0.8) then
+      // Two tesseract filters are required, sometimes one works better than the other
+      tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
+      tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
+      tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
+
+      tNameArr.append(tempText);
+
+      tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
+      tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
+      tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
+
+      tNameArr2.append(tempText);
+
+      print('TRSGrandExchange.__enterName(): At result '+ toStr(i) + ': ' + tNameArr[i] + ' / ' + tNameArr2[i], TDebug.DEBUG);
+    end;
+
+    for i := 0 to high(tNameArr) do
+      if max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName))) > bestMatch then
       begin
-        beforeBMP := bitmapFromClient(itemBox);
-        setBitmapName(beforeBMP, 'beforeBMP'); // Takes a screenshot of the item icon (empty)
-        mouseBox(resultsBox[i], MOUSE_LEFT);
-        afterBMP := bitmapFromClient(itemBox);  // This is re-calculated to check for when the icon appears
-        setBitmapName(afterBMP, 'afterBMP');
-        timeOut := GetTickCount() + randomRange(3000, 4000);
-        while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // Waits for the icon to show up in the slot
-        begin
-          if getTickCount() > timeOut then
-          begin
-            print('TRSGrandExchange.__enterName(): No item appeared after clicking result.', tDebug.ERROR);
-            freeBitmap(beforeBMP);
-            freeBitmap(afterBMP);
-            exit(false);
-          end;
+        textIndex := i;
+        bestMatch := max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName)));
+      end;
 
-          wait(randomRange(100,250));
-          freeBitmap(afterBMP);
-          afterBMP := bitmapFromClient(itemBox);
-          setBitmapName(afterBMP, 'afterBMP');
-        end;
+    if bestMatch < 0.75 then exit(False);
 
-        // If we didn't timeout above we're now successfully ready for price and quantity updates
-        while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
-          wait(50);                                          // There is another animation where the search box slides down to reveal the price/quantity
+    beforeBMP := bitmapFromClient(itemBox);
+    setBitmapName(beforeBMP, 'beforeBMP'); // Takes a screenshot of the item icon (empty)
 
-        print('TRSGrandExchange.__enterName(): Clicked name successfully.');
+    // Now click the box
+    mouseBox(resultsBox[textIndex], MOUSE_LEFT);
+
+    afterBMP := bitmapFromClient(itemBox);  // This is re-calculated to check for when the icon appears
+    setBitmapName(afterBMP, 'afterBMP');
+
+    timeOut := GetTickCount() + randomRange(3000, 4000);
+    while calculatePixelShift(beforeBMP, afterBMP, intToBox(0, 0, itemBox.getWidth()-1, itemBox.getHeight()-1)) = 0 do // Waits for the icon to show up in the slot
+    begin
+      if getTickCount() > timeOut then
+      begin
+        print('TRSGrandExchange.__enterName(): No item appeared after clicking result.', tDebug.ERROR);
         freeBitmap(beforeBMP);
         freeBitmap(afterBMP);
-        wait(randomRange(350,500)); // Slight lag on the price/quantity boxes being ready
-        exit(true);
+        exit(false);
       end;
+
+      wait(randomRange(100,250));
+      freeBitmap(afterBMP);
+      afterBMP := bitmapFromClient(itemBox);
+      setBitmapName(afterBMP, 'afterBMP');
     end;
+
+    // If we didn't timeout above we're now successfully ready for price and quantity updates
+    while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
+      wait(50);                                          // There is another animation where the search box slides down to reveal the price/quantity
+
+    print('TRSGrandExchange.__enterName(): Clicked name successfully.');
+    freeBitmap(beforeBMP);
+    freeBitmap(afterBMP);
+    wait(randomRange(350,500)); // Slight lag on the price/quantity boxes being ready
+    exit(true);
+  end;
 
   print('TRSGrandExchange.__enterName(): Found no matches for item: ' + itemName, TDebug.SUB);
 end;
@@ -1481,13 +1510,13 @@ begin
   end;
 
   for i := high(collectBox) downto 0 do
-    for  0 to 4 do // Attempt up to 3 times in case of lag
+    for 0 to 4 do // Attempt up to 5 times in case of lag
       if isItemIn(collectBox[i]) then
       begin
         case (noted and (not gotNoted)) of
           True:
             begin
-              mouseBOX(collectbox[i], MOUSE_RIGHT);
+              mouseBox(collectbox[i], MOUSE_RIGHT);
               if chooseOption.isOpen(1500) then
                 if chooseOption.optionsExist(['note', 'Collect-note', 'ect-no', '-not']) then
                   gotNoted := chooseOption.select(['note', 'Collect-note', 'ect-no', '-not'])
@@ -1497,12 +1526,19 @@ begin
             end;
           False: mouseBox(collectBox[i], MOUSE_LEFT);
         end;
-        wait(randomRange(1250, 1750));
 
-        if not self.__isProgressOpen() then
+        // Wait for the item to go away
+        timeOut := getTickCount() + 1500;
+        while (getPixelShift(collectBox[i], 350) > 10) or isItemIn(collectBox[i]) do
         begin
-          result := true;
-          break(2);
+          if not self.__isProgressOpen() then
+          begin
+            result := true;
+            break(2);
+          end;
+
+          wait(100);
+          if getTickCount() > timeout then break(2);
         end;
       end;
 
