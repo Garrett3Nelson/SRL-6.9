@@ -1662,8 +1662,8 @@ var
 begin
   TBA := grid(1, 2, 180, 24, 0, 34, point(self.x1 + _OFFSET.x, self.y1 + _OFFSET.y));
   case ToInventory of
-    true: multiClick(TBA[0].getMiddle().rand(5), 25, 3);
-    false: multiClick(TBA[1].getMiddle().rand(5), 25, 3);
+    true: mouse(TBA[0].getMiddle().rand(5), MOUSE_LEFT);
+    false: mouse(TBA[1].getMiddle().rand(5), MOUSE_LEFT);
   end;
 end;
 
