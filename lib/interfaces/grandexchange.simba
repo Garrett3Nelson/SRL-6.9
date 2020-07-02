@@ -2065,7 +2065,7 @@ Example:
 *)
 function TRSGrandExchange.sellItem(packSlot: integer; price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000; slotNumber : Integer = -1): boolean;
 var
-  i, nextSlot: integer;
+  i, nextSlot, tries: integer;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
 begin
   if not self.isOpen() then
@@ -2094,11 +2094,23 @@ begin
     end;
   end;
 
-  if isItemIn(self.getPackSlotBox(packSlot)) then
-    mouseBox(self.getPackSlotBox(packSlot), MOUSE_LEFT)
-  else
+  while (tries < 4) do
   begin
-    print('TRSGrandExchange.sellItem(): No item in pack slot: ' + intToStr(packSlot), TDebug.ERROR);
+    if isItemIn(self.getPackSlotBox(packSlot)) then
+      mouseBox(self.getPackSlotBox(packSlot), MOUSE_LEFT)
+    else
+    begin
+      print('TRSGrandExchange.sellItem(): No item in pack slot: ' + intToStr(packSlot), TDebug.ERROR);
+      exit(false);
+    end;
+
+    if self.__isOfferOpen(3000) then break();
+    tries += 1;
+  end;
+
+  if tries >= 3 then
+  begin
+    print('TRSGrandExchange.sellItem(): Could not open offer by clicking packslot ' + intToStr(packSlot), TDebug.ERROR);
     exit(false);
   end;
 
@@ -2106,8 +2118,11 @@ begin
   begin
     self.__enterPrice(price);
     self.__enterQuantity(quantity);
-    mouseBox(confirm, MOUSE_LEFT);
-
+    if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
+    begin
+      mouseBox(confirm, MOUSE_LEFT);
+      wait(randomRange(1000, 1500));
+    end;
 
     wait(randomRange(1000, 1500));
   end;
