@@ -993,12 +993,12 @@ end;
 {$ENDIF}
 
 {*
-__enterQuantity
+__enterBuyQuantity
 ---------------
 
 .. code-block:: pascal
 
-    procedure TRSGrandExchange.__enterQuantity(quantity: string);
+    procedure TRSGrandExchange.__enterBuyQuantity(quantity: string);
 
 Returns true if it successfully enters the desired item quantity **quantity**
 into the input box.
@@ -1006,18 +1006,18 @@ into the input box.
 .. note::
 
     - by The Mayor
-    - Last Updated: 7 July 2016 by SlipperyPickle
+    - Last Updated: 7 July 2020 by 3Garrett3
 
 Example:
 
 .. code-block:: pascal
 
-    grandExchange.__enterQuantity('1500'); // To buy/sell 1500 of an item
-    grandExchange.__enterQuantity('all'); // To SELL all of the item
+    grandExchange.__enterBuyQuantity('1500'); // To buy 1500 of an item
+    grandExchange.__enterBuyQuantity('lim'); // To buy item limit
 
 *}
 {$IFNDEF CODEINSIGHT}
-procedure TRSGrandExchange.__enterQuantity(quantity: string);
+procedure TRSGrandExchange.__enterBuyQuantity(quantity: string);
 var
   i: integer;
   strArr : TStringArray;
@@ -1033,6 +1033,62 @@ begin
   i := strArr.returnInArray(lowercase(quantity));
 
   if inRange(i, 0, 4) then
+    mouseBox(amountBox[i], MOUSE_LEFT)
+  else
+  begin
+    inputBox := self.__getInputBoxes();
+    mouseBox(inputBox[0], MOUSE_LEFT);
+    if self.__findInsertionCursor(inputBox[0]) then
+    begin
+      wait(randomRange(150,250));
+      typeSend(toStr(quantity), true);
+      wait(randomRange(1250, 1500));
+    end;
+  end;
+end;
+{$ENDIF}
+
+{*
+__enterSellQuantity
+---------------
+
+.. code-block:: pascal
+
+    procedure TRSGrandExchange.__enterSellQuantity(quantity: string);
+
+Returns true if it successfully enters the desired item quantity **quantity**
+into the input box.
+
+.. note::
+
+    - by The Mayor
+    - Last Updated: 7 July 2020 by 3Garrett3
+
+Example:
+
+.. code-block:: pascal
+
+    grandExchange.__enterSellQuantity('1500'); // To sell 1500 of an item
+    grandExchange.__enterSellQuantity('all'); // To sell all items
+
+*}
+{$IFNDEF CODEINSIGHT}
+procedure TRSGrandExchange.__enterSellQuantity(quantity: string);
+var
+  i: integer;
+  strArr : TStringArray;
+  inputBox: TBoxArray;
+  amountBox: TBoxArray := grid(4, 1, 34, 24, 44, 0, point(self.x1 + 84, self.y1 + 298));
+begin
+  if quantity = '-1' then
+    exit();
+  // If we don't want to press any button (ie sell all noted items) enter -1
+
+  strArr := ['1', '10', '100', 'all'];
+
+  i := strArr.returnInArray(lowercase(quantity));
+
+  if inRange(i, 0, 3) then
     mouseBox(amountBox[i], MOUSE_LEFT)
   else
   begin
@@ -2117,7 +2173,7 @@ begin
   if self.__isOfferOpen(3000) then
   begin
     self.__enterPrice(price);
-    self.__enterQuantity(quantity);
+    self.__enterSellQuantity(quantity);
     if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
     begin
       mouseBox(confirm, MOUSE_LEFT);
@@ -2221,7 +2277,7 @@ begin
     if self.__enterName(itemName) then
     begin
       self.__enterPrice(price);
-      self.__enterQuantity(quantity);
+      self.__enterBuyQuantity(quantity);
       if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
       begin
         mouseBox(confirm, MOUSE_LEFT);
