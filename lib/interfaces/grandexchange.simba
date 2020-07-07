@@ -1326,6 +1326,11 @@ begin
     freeBitmap(beforeBMP);
     freeBitmap(afterBMP);
     wait(randomRange(350,500)); // Slight lag on the price/quantity boxes being ready
+    if length(self.__getInputBoxes()) < 3 then
+    begin
+      print('TRSGrandExchange.__enterName(): Both input boxes not visible yet, waiting');
+      while length(self.__getInputBoxes()) < 3 do wait(50);
+    end;
     exit(true);
   end;
 
@@ -2172,6 +2177,12 @@ begin
 
   if self.__isOfferOpen(3000) then
   begin
+    if length(self.__getInputBoxes()) < 2 then
+    begin
+      print('TRSGrandExchange.sellItem(): Both input boxes not visible yet, waiting');
+      while length(self.__getInputBoxes()) < 2 do wait(50);
+    end;
+
     self.__enterPrice(price);
     self.__enterSellQuantity(quantity);
     if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
