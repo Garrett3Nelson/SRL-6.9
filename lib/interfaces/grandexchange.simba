@@ -801,7 +801,7 @@ begin
   if self.__isSlotActive(geSlot) then
   begin
     findColors(TPA, 2694922, TBA[geSlot - 1]);
-    result := length(TPA) > 10000;
+    result := length(TPA) > 5000;
   end;
 
   print('TRSGrandExchange._isSlotEmpty(): Slot ' + toStr(geSlot) + ' = ' + boolToStr(result), TDebug.SUB);
