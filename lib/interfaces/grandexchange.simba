@@ -1231,10 +1231,12 @@ var
   textTol : integer := 18;
   textCTS : tColorSettings := [2, [0.02, 0.54]];
   textTPA : tPointArray;
-  textBox : tBox;
+  textBox, tempBox : tBox;
   bestMatch : Extended;
 begin
-  while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
+  tempBox := self.getBounds();
+  tempBox.edit(10,20,-10,-10);
+  while getPixelShift(tempBox, 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
     wait(50);                                          // There is a fancy loading animation where the search box slides up before the slot is ready
 
   wait(randomRange(300,600));
@@ -1319,7 +1321,7 @@ begin
     end;
 
     // If we didn't timeout above we're now successfully ready for price and quantity updates
-    while getPixelShift(self.getBounds(), 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
+    while getPixelShift(tempBox, 100) > 100 do  // Cursor flashing is ~50 otherwise the slot should not change
       wait(50);                                          // There is another animation where the search box slides down to reveal the price/quantity
 
     print('TRSGrandExchange.__enterName(): Clicked name successfully.');
@@ -1758,7 +1760,7 @@ var
   redBox: TBox;
   minRange, t : Integer;
 begin
-  t := getSystemTime() + 5000;
+  t := getSystemTime() + 6000;
   while getSystemTime() < t do
   begin
     if onMS then
@@ -1774,9 +1776,9 @@ begin
       minRange := 1000;
     end;
 
-    mouse(abortButton.rand(5), MOUSE_LEFT);
+    mouse(abortButton.rand(3), MOUSE_LEFT);
     result := waitColorCountRange(1048714, 5, redBox, 2000, minRange);
-    if result then break;
+    if result then break else self.__returnToSummary();
   end;
 end;
 
