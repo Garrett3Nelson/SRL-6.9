@@ -593,12 +593,13 @@ begin
 
     box := getTPABounds(atpa[i]);
 
-    if (not inrange(box.getheight(), 22, 24)) then   //the height should be 23 pixels
-      continue();
+    //if (not inrange(box.getheight(), 22, 24)) then   //the height should be 23 pixels
+      //continue();
 
       if (similarColors(COLOR_CHECK, getColor(box.x1, min(box.y2 + 4, cH - 1)), 18)) and (similarColors(COLOR_CHECK, getColor(box.x2, min(box.y2 + 4, cH - 1)), 18)) then
       begin
         b := box;
+        b.edit(0,0,0,(23- b.getHeight()));
         exit(true);
       end;
   end;

@@ -2128,7 +2128,8 @@ Example:
 *)
 function TRSGrandExchange.sellItem(packSlot: integer; price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000; slotNumber : Integer = -1): boolean;
 var
-  i, nextSlot, tries: integer;
+  i, nextSlot, tries, x, y: integer;
+  packBox : tBox;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
 begin
   if not self.isOpen() then
@@ -2159,9 +2160,15 @@ begin
 
   while (tries < 4) do
   begin
-    if isItemIn(self.getPackSlotBox(packSlot)) then
-      mouseBox(self.getPackSlotBox(packSlot), MOUSE_LEFT)
-    else
+    packBox := self.getPackSlotBox(packSlot);
+    if isItemIn(packBox) then
+    begin
+      getMousePos(x,y);
+      if pointInBox(point(x,y), packBox) then
+        mouse(point(x,y), MOUSE_LEFT)
+      else
+        mouseBox(packBox, MOUSE_LEFT);
+    end else
     begin
       print('TRSGrandExchange.sellItem(): No item in pack slot: ' + intToStr(packSlot), TDebug.ERROR);
       exit(false);
