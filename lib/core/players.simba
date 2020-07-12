@@ -98,6 +98,7 @@ type
     secureLogin: boolean;
     worked: TTimeMarker; // Automatically calculated if SRL's login methods are used
     world: integer; // -1 to click play button; 0 for random world
+    authCode : array[0..1] of integer;
     skillLevel: array[0..(SKILL_COUNT - 1)] of integer;
     booleans: array[0..99] of boolean;
     integers: array[0..99] of integer;
@@ -907,6 +908,35 @@ begin
 end;
 {$ENDIF}
 
+function __findAuth() : Boolean;
+var
+  textTPA : tPointArray;
+  atpa : t2DPointArray;
+begin
+  findColorsTolerance(textTPA, 1021103, getClientBounds(), 14, colorSetting(2,  0.06, 1.22));
+  if length(textTPA) > 500 then
+  begin
+    atpa := textTPA.cluster(10);
+    ATPA.sortBySize(true);
+
+    result := (stringMatch(lowercase(tesseract_getText(ATPA[0].getBounds(), [3, 3, [False, 25, TM_MEAN]])),'authenticator') > 0.75);
+  end;
+end;
+
+function tPlayer.__enterAuth() : Boolean;
+var
+  i : Integer;
+begin
+  for i := 0 to 1 do
+  begin
+    typeSend(toStr(self.authCode[i]), True);
+    wait(randomRange(5000,10000));
+    if not __findAuth() then exit(True);
+  end;
+end;
+
+
+
 {*
 __handleLoginPopup
 ------------------
@@ -1073,6 +1103,12 @@ begin
     print('Entering password...', TDebug.SUB);
     __enterLoginInfo(__boxPassword, self.password, false, true);
     wait(8000 + random(3000));
+
+    if __findAuth() then
+     if not self.__enterAuth() then
+     begin
+      print('Failed entering auth', tDebug.FATAL);
+     end;
 
     result := self.__handleLoginPopup(inc(tries), false, reachedMaxTries);
 
