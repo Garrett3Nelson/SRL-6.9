@@ -1219,7 +1219,7 @@ const
   TESS_FILTER_GE_CHARS: TTesseractFilter = [5, 5, [False, 15, TM_Mean]];
   TESS_FILTER_GE_CHARS_BACKUP: TTesseractFilter = [3, 4, [False, 18, TM_Mean]];
 var
-  i, beforeBMP, afterBMP, textIndex : integer;
+  i, beforeBMP, afterBMP, textIndex, tries : integer;
   timeOut: UInt64;
   itemBox : TBox := [self.x1 + 81, self.y1 + 170, self.x2 - 647, self.y2 - 347]; // The box for the item icon
   resultsBox: TBoxArray := grid(3, 4, 160, 49, 168, 55, point(self.x1+104, self.y1 + 285)); // Updated box locations // Updated box locations
@@ -1252,48 +1252,52 @@ begin
   if self.__findInsertionCursor(inputBox[0]) then
     typeSend(itemName, false);
 
-  mouseBox([self.x1, self.y1, self.x2, inputBox[0].y1], MOUSE_MOVE);
   if waitColorCountRange(8286291, 14, colorSetting(2, 0.03, 0.36), resultsTextBox[0], random(5000,8000), 10) then
   begin // Updated colors
-    for i := 0 to high(resultsTextBox) do
-    // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
-    // Returns false positives (ie big bones are true when the text is bones)
-    // Here we generate an array with all possible results. Then we will sort for the best match
+    for tries := 0 to 1 do
     begin
-      findColorsTolerance(textTPA, textCol, resultsTextBox[i], textTol, textCTS);
-      if length(textTPA) = 0 then break(); // We've reached the end of results
-
-      textBox := textTPA.getBounds();
-      textBox.edit(-4, -4, 3, 3); // Tesseract works better with some empty space around text
-
-      // Create a custom whitelist of letters, any numbers that are in the name, and any special chars like (/,)
-      TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
-
-      // Two tesseract filters are required, sometimes one works better than the other
-      tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
-      tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
-      tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
-
-      tNameArr.append(tempText);
-
-      tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
-      tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
-      tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
-
-      tNameArr2.append(tempText);
-
-      print('TRSGrandExchange.__enterName(): At result '+ toStr(i) + ': ' + tNameArr[i] + ' / ' + tNameArr2[i], TDebug.DEBUG);
-    end;
-
-    for i := 0 to high(tNameArr) do
-      if max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName))) > bestMatch then
+      for i := 0 to high(resultsTextBox) do
+      // Removing or containsMatch(tesseractGetText(resultsTextBox[i], TESS_FILTER_GE_CHARS), itemName, false,  0.75)
+      // Returns false positives (ie big bones are true when the text is bones)
+      // Here we generate an array with all possible results. Then we will sort for the best match
       begin
-        textIndex := i;
-        bestMatch := max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName)));
+        findColorsTolerance(textTPA, textCol, resultsTextBox[i], textTol, textCTS);
+        if length(textTPA) = 0 then break(); // We've reached the end of results
+
+        textBox := textTPA.getBounds();
+        textBox.edit(-4, -4, 3, 3); // Tesseract works better with some empty space around text
+
+        // Create a custom whitelist of letters, any numbers that are in the name, and any special chars like (/,)
+        TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
+
+        // Two tesseract filters are required, sometimes one works better than the other
+        tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
+        tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
+        tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
+
+        tNameArr.append(tempText);
+
+        tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
+        tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
+        tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
+
+        tNameArr2.append(tempText);
+
+        print('TRSGrandExchange.__enterName(): At result '+ toStr(i) + ': ' + tNameArr[i] + ' / ' + tNameArr2[i], TDebug.DEBUG);
       end;
 
-    if bestMatch < 0.75 then exit(False);
+      for i := 0 to high(tNameArr) do
+        if max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName))) > bestMatch then
+        begin
+          textIndex := i;
+          bestMatch := max(stringMatch(lowerCase(tNameArr[i]), lowerCase(itemName)), stringMatch(lowerCase(tNameArr2[i]), lowerCase(itemName)));
+        end;
 
+      if bestMatch >= 0.75 then break();
+      mouseBox(intToBox(0,0,self.x2,inputBox[1].y2), MOUSE_MOVE);
+    end;
+
+    if bestMatch < 0.75 then exit(False);
     beforeBMP := bitmapFromClient(itemBox);
     setBitmapName(beforeBMP, 'beforeBMP'); // Takes a screenshot of the item icon (empty)
 
@@ -2203,7 +2207,7 @@ begin
     wait(randomRange(1000, 1500));
   end;
 
-  result:= self.__isSlotSelling(nextSlot);
+  result:= self.__isSlotSelling(nextSlot, True);
   print('TRSGrandExchange.sellItem(): ' + boolToStr(result), TDebug.SUB);
 
   if waitCollect then
@@ -2307,7 +2311,7 @@ begin
       self.__returnToSummary();
 
 
-  result := self.__isSlotBuying(nextSlot);
+  result := self.__isSlotBuying(nextSlot, True);
   print('TRSGrandExchange.buyItem(): ' + boolToStr(result), TDebug.SUB);
 
   if waitCollect then
