@@ -1327,6 +1327,7 @@ Example:
 function TPlayer.leaveLobby(): boolean;
 begin
   result := lobby._leave();
+  if result then self.worked.pause();
 end;
 
 (*
