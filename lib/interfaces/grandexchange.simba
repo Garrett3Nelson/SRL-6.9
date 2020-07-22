@@ -1341,7 +1341,17 @@ begin
     if length(self.__getInputBoxes()) < 3 then
     begin
       print('TRSGrandExchange.__enterName(): Both input boxes not visible yet, waiting');
-      while length(self.__getInputBoxes()) < 3 do wait(50);
+
+      timeOut := GetTickCount() + randomRange(3000, 4000);
+      while length(self.__getInputBoxes()) < 3 do
+      begin
+        wait(50);
+        if getTickCount() > timeOut then
+        begin
+          print('TRSGrandExchange.__enterName(): Timed out with not enough input boxes.', tDebug.ERROR);
+          exit(false);
+        end;
+      end;
     end;
     exit(true);
   end;
