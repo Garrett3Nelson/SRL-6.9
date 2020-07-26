@@ -774,7 +774,7 @@ begin
   mouseCircle(self.button[MM_BUTTON_COMPASS].center.x, self.button[MM_BUTTON_COMPASS].center.y,
               self.button[MM_BUTTON_COMPASS].radius, MOUSE_MOVE);
 
-  if faceSouth or (random(4) = 2) then
+  if faceSouth or (random(10) = 2) then
   begin
     fastClick(MOUSE_RIGHT);
     wait(random(100, 200));

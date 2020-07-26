@@ -2222,8 +2222,9 @@ begin
       while length(self.__getInputBoxes()) < 2 do wait(50);
     end;
 
-    self.__enterPrice(price);
     self.__enterSellQuantity(quantity);
+    self.__enterPrice(price);
+
     if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
     begin
       mouseBox(confirm, MOUSE_LEFT);
@@ -2326,8 +2327,8 @@ begin
   if self.__isOfferOpen(3000) then
     if self.__enterName(itemName) then
     begin
-      self.__enterPrice(price);
       self.__enterBuyQuantity(quantity);
+      self.__enterPrice(price);
       if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
       begin
         mouseBox(confirm, MOUSE_LEFT);
