@@ -767,6 +767,75 @@ begin
 end;
 {$ENDIF}
 
+procedure killRS();
+var
+  Process: PtrUInt;
+  PID: UInt32;
+begin
+  PID := GetTargetPID();
+
+  Process := OpenProcess($1F0FFF, False, PID);
+  TerminateProcess(Process, 0);
+  CloseHandle(Process);
+end;
+
+function findRS() : Boolean;
+var
+  tempProcs : tSysProcArr;
+  i : Integer;
+begin
+  tempProcs := GetProcesses();
+  for i := 0 to high(tempProcs) do
+  begin
+    if tempProcs[i].Title = "RuneScape" then
+    begin
+      setTarget(tempProcs[i]);
+      activateClient();
+      exit(True);
+    end;
+  end;
+end;
+
+function createRS() : Boolean;
+var
+  process : tProcess;
+  t : int64;
+begin
+  try
+    Process.init(nil);
+    Process.setCommandLine("C:\Program Files\Jagex\RuneScape Launcher\RuneScape.exe");
+    Process.Execute();
+  except
+    exit(False);
+  finally
+    Process.Free();
+  end;
+
+  t := getTickCount() + 60000;
+
+  while not FindRS() do
+  begin
+    wait(5000);
+    if getTickCount() > t then exit(False);
+  end;
+
+  t := getTickCount() + 60000;
+  while not __setInputBoxes() do
+  begin
+    wait(5000);
+    if getTickCount() > t then exit(False);
+  end;
+
+  result := True;
+end;
+
+function restartRS() : Boolean;
+begin
+  if findRS() then killRS();
+  wait(5000);
+  result := createRS();
+end;
+
 {*
 __respondToPopup
 ----------------
@@ -834,11 +903,8 @@ begin
 
       'Reload_Client':
         begin
-          if (@SRL_Events[EVENT_RS_UPDATE] <> nil) then
-          begin
-            print('RS Update: Going to call EVENT_RS_UPDATE procedure', TDebug.WARNING);
-            SRL_Events[EVENT_RS_UPDATE]();
-          end;
+          print('RS Update: Going to call EVENT_RS_UPDATE procedure', TDebug.WARNING);
+          restartRS();
         end;
     end;
 
@@ -1010,10 +1076,10 @@ begin
     ['Player in member-only area',            0,         0,  'Set_Member'],
     ['Error connecting',                      20000,     4,  'Terminate'],
     ['Unable to connect',                     20000,     4,  'Terminate'],
-    ['Runescape has been updated',            0,         0,  'Terminate'],         //Reload_Client needs to be fixed
-    ['Client token changed',                  0,         0,  'Terminate'],         //Reload_Client needs to be fixed
-    ['session has now ended',                 0,         0,  'Terminate'],         //Reload_Client needs to be fixed
-    ['Our systems are currently unavailable', 3 * 60000, 8,  'Terminate'],         //Reload_Client needs to be fixed
+    ['Runescape has been updated',            0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
+    ['Client token changed',                  0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
+    ['session has now ended',                 0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
+    ['Our systems are currently unavailable', 3 * 60000, 8,  'Reload_Client'],         //Reload_Client needs to be fixed
     ['Login limit exceeded',                  20000,     8,  'Set_World'],
     ['You must have a total skill level of',  0,         0,  'Set_World'],
     ['Cannot connect to world',               10000,     0,  'Set_World']];
