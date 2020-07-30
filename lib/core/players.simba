@@ -781,19 +781,18 @@ end;
 
 function findRS() : Boolean;
 var
-  tempProcs : tSysProcArr;
-  i : Integer;
+  Root, Child: TOSWindow;
 begin
-  tempProcs := GetProcesses();
-  for i := 0 to high(tempProcs) do
-  begin
-    if tempProcs[i].Title = "RuneScape" then
-    begin
-      setTarget(tempProcs[i]);
-      activateClient();
-      exit(True);
-    end;
-  end;
+  for Root in GetVisibleWindows() do
+    if (Root.GetTitle() = 'RuneScape') then
+      for Child in Root.GetChildren() do
+        if (Child.GetClassName() = 'JagOpenGLView') then
+        begin
+          WriteLn('Found: ', Child);
+
+          Client.getIOManager().SetTarget(Child);
+          exit(True);
+        end;
 end;
 
 function createRS() : Boolean;
@@ -812,7 +811,7 @@ begin
   end;
 
   t := getTickCount() + 60000;
-
+  wait(30000);
   while not FindRS() do
   begin
     wait(5000);
@@ -831,6 +830,7 @@ end;
 
 function restartRS() : Boolean;
 begin
+  print('Restarting Runescape.exe');
   if findRS() then killRS();
   wait(5000);
   result := createRS();
@@ -908,8 +908,8 @@ begin
         end;
     end;
 
-    if (players.getActive() < 1) then
-      print('No other active players, terminating script', TDebug.FATAL);
+    //if (players.getActive() < 1) then
+    //  print('No other active players, terminating script', TDebug.FATAL);
 
     reachedMax := true;
   end;
