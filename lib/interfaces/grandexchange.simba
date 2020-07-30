@@ -1337,7 +1337,7 @@ begin
     print('TRSGrandExchange.__enterName(): Clicked name successfully.');
     freeBitmap(beforeBMP);
     freeBitmap(afterBMP);
-    wait(randomRange(350,500)); // Slight lag on the price/quantity boxes being ready
+    wait(randomRange(600,1000)); // Slight lag on the price/quantity boxes being ready
     if length(self.__getInputBoxes()) < 3 then
     begin
       print('TRSGrandExchange.__enterName(): Both input boxes not visible yet, waiting');
