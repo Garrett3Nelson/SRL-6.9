@@ -473,7 +473,7 @@ Example:
 *)
 procedure takeScreenshot(fileName: string);
 begin
-  saveScreenshot(logPath + timeRunning() + '_' + fileName);
+  saveScreenshot(logPath + theTime() + '_' + fileName);
   print('Saving screenshot: ' + fileName, TDebug.SUB);
 end;
 
