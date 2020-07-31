@@ -219,7 +219,7 @@ Example:
     if (options.open()) then
       writeln('We opened the options interface');
 *)
-function TRSOptions.open(waitTime: integer = 5000): boolean;
+function TRSOptions.open(waitTime: integer = 7500): boolean;
 var
   t: UInt64;
 begin

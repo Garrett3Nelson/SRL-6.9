@@ -1266,7 +1266,7 @@ function __clickLogoutConfirmation(timeout : integer): boolean
 var
   buttonTPA : tPointArray;
   ATPA : T2DPointArray;
-  t : Integer;
+  t : Int64;
 begin
   t := getSystemTime();
   while (length(buttonTPA) < 500) do
@@ -1327,7 +1327,7 @@ begin
   if options.open() then
   begin
     options.selectOption(['Logout', 'ogout', 'gout']);
-    __clickLogoutConfirmation(2000);
+    __clickLogoutConfirmation(5000);
     t := (getSystemTime() + (7000));
 
     repeat
