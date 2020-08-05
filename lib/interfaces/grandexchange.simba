@@ -1241,7 +1241,12 @@ begin
 
   wait(randomRange(300,600));
 
-  inputBox := self.__getInputBoxes();
+  timeOut := getTickCount() + 3000;
+  while length(inputBox) = 0 do
+  begin
+    if getTickCount() > timeOut then exit(False);
+    inputBox := self.__getInputBoxes();
+  end;
 
   if not self.__findInsertionCursor(inputBox[0]) then
   begin

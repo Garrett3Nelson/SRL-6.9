@@ -90,6 +90,7 @@ type
     password: string;
     bankPin: string;
     location: string;
+    otpSecret : String;
     isActive: boolean;
     isMember: boolean;
     findMod: boolean;
@@ -98,7 +99,6 @@ type
     secureLogin: boolean;
     worked: TTimeMarker; // Automatically calculated if SRL's login methods are used
     world: integer; // -1 to click play button; 0 for random world
-    authCode : array[0..1] of integer;
     skillLevel: array[0..(SKILL_COUNT - 1)] of integer;
     booleans: array[0..99] of boolean;
     integers: array[0..99] of integer;
@@ -995,7 +995,7 @@ var
 begin
   for i := 0 to 1 do
   begin
-    typeSend(toStr(self.authCode[i]), True);
+    typeSend(getOTPNow(self.otpSecret), True);
     wait(randomRange(5000,10000));
     if not __findAuth() then exit(True);
   end;
