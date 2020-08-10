@@ -213,7 +213,7 @@ begin
       result := true;
       break();
     end;
-  until (getSystemTime() >= t);
+  until (getTickCount() >= t);
   print('TRSGrandExchange.isOpen(): Result = ' + boolToStr(result));
 end;
 
@@ -709,29 +709,34 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function TRSGrandExchange.__isProgressOpen(waitTime: integer = 500): boolean;
 var
-  timeOut: integer;
+  timeOut: int64;
   TPA: TPointArray;
   backSpace: TBox := [self.x1 + 15, self.y2 - 46, self.x1 + 49, self.y2 - 22];
 begin
   timeOut := GetTickCount() + waitTime;
-
+  //print('tRSGrandExchange.__isProgressOpen(): Starting');
   while (GetTickCount() < timeOut) do
+  begin
+    //print('tRSGrandExchange.__isProgressOpen(): findColors');
     if findColors(TPA, 6247745, self.getBounds()) then
     begin
+      //print('tRSGrandExchange.__isProgressOpen(): Length = ' + toStr(length(TPA)));
       if (length(TPA) = 3501) then
       begin
         result := True;
-        break;
+        break();
       end else
       // Detects the back button - Note that this will return true for Progress or Offer
       // Only required when hovering something (abort button for example) and the
       // Outline of the slot is covered
+      //print('tRSGrandExchange.__isProgressOpen(): Back button failsafe');
       if countColorTolerance(10462127, backSpace, 25, colorSetting(2, 0.20, 0.30)) > 200 then
       begin
         result := True;
         break;
       end;
     end;
+  end;
   print('TRSGrandExchange.isProgressOpen() = ' + boolToStr(result), TDebug.SUB);
 end;
 {$ENDIF}
@@ -1783,10 +1788,11 @@ function TRSGrandExchange.__clickAbort(geSlot : Integer = 0; onMS : Boolean = Fa
 var
   abortButton: TPoint;
   redBox: TBox;
-  minRange, t : Integer;
+  minRange : Integer;
+  t : Int64;
 begin
-  t := getSystemTime() + 6000;
-  while getSystemTime() < t do
+  t := getTickCount() + 6000;
+  while getTickCount() < t do
   begin
     if onMS then
     begin

@@ -1313,7 +1313,7 @@ function TPlayer.logout(): boolean;
 var
   t: LongWord;
 begin
-  if (not isLoggedIn()) then
+  if (not isLoggedIn()) and (not lobby.isOpen()) then
     exit(true);
 
   print('TPlayer.logout()', TDebug.HEADER);
@@ -1324,6 +1324,20 @@ begin
     SRL_Events[EVENT_LOGOUT]();
   end;
 
+  if lobby.isOpen() then
+  begin
+    lobby._leave();
+
+    t := (getSystemTime() + (7000));
+
+    repeat
+      print('Waiting for login screen...');
+      result := (not isLoggedIn());
+      wait(700 + random(500));
+    until result or (getSystemTime() > t);
+
+    self.worked.pause();
+  end else
   if options.open() then
   begin
     options.selectOption(['Logout', 'ogout', 'gout']);
@@ -1338,7 +1352,7 @@ begin
 
     self.worked.pause();
   end else
-    print('Failed to click logout text', TDebug.ERROR);
+    print('Failed to logout', TDebug.ERROR);
 
   print('TPlayer.logout(): ' + toStr(result), TDebug.FOOTER);
 end;
