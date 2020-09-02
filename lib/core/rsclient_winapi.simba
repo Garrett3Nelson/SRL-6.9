@@ -1,3 +1,4 @@
+{$IFDEF WINDOWS}
 {$IFNDECL HWND}
   type HWND = type PtrUInt;
 {$ENDIF}
@@ -88,3 +89,4 @@ begin
   TerminateProcess(Process, 0);
   CloseHandle(Process);
 end;
+{$ENDIF}

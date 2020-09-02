@@ -341,7 +341,7 @@ Example:
 *)
 function TIntegerArray.sum() : Integer;
 begin
-  result := sumIntegerArray(self);
+  result := sum64IntArr(self);
 end;
 
 (*

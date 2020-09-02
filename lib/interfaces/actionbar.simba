@@ -1036,7 +1036,7 @@ begin
         setlength(line, length(line) - 3);
 
       sumTotal := 0;
-      sumTotal := sumIntegerArray(fastGetPixels(clientBitmap, line));
+      sumTotal := sum64IntArr(fastGetPixels(clientBitmap, line));
 
       if (sumTotal <> 0) then
       begin

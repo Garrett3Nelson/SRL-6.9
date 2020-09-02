@@ -63,7 +63,6 @@ SRL library isn't available to you.
 {$include_once lib/core/players.simba}
 {$include_once lib/core/client.simba}
 {$include_once lib/misc/antiban.simba}
-{$include_once lib/misc/sps.simba}
 
 {$f+}
 
