@@ -165,10 +165,10 @@ begin
       begin
         self.setBounds([b.x1 - 88, b.y1 - 8, b.x2 + 570, b.y2 + 515]);
         setLength(self.tabBoxes, 4);
-        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 98, self.x1 + 156, self.y1+ 124]; // Grand Exchange
-        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 98, self.x1 + 262, self.y1+ 124]; // History
-        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 98, self.x1 + 336, self.y1+ 124]; // Sets
-        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 98, self.x1 + 437, self.y1+ 124]; // Favourites
+        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 100, self.x1 + 156, self.y1+ 124]; // Grand Exchange
+        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 100, self.x1 + 262, self.y1+ 124]; // History
+        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 100, self.x1 + 336, self.y1+ 124]; // Sets
+        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 100, self.x1 + 437, self.y1+ 124]; // Favourites
         exit(true);
       end;
     end;
@@ -2105,9 +2105,53 @@ Example:
     end;
 
 *)
+
+
 function TRSGrandExchange.getPercentDone(geSlot: integer): Extended; overload;
 begin
   result := (1/154) * self.__getProgressCount(geSlot);
+end;
+
+function tRSGrandExchange.__isWarning() : Boolean;
+var
+  dismiss : tPointArray;
+  atpa : t2DPointArray;
+  mainBox, geBox : tBox;
+  timeout : Int64;
+  i : Integer;
+begin
+  mainBox := intToBox(self.x1, self.y1, self.x1 + 548, self.y1 + 535);
+  findColorsTolerance(dismiss, 14983438, mainBox, 23, colorSetting(2, 0.08, 0.43));
+
+  if length(dismiss) > 1000 then
+  begin
+    atpa := dismiss.toATPA(100, 23);
+
+    atpa.sortFromMidPoint(self.getBounds().getMiddle());
+
+    for i := 0 to high(atpa) do
+    begin
+      if atpa[i].getBounds().getWidth() < 50 then continue();
+
+      geBox := self.getBounds();
+      geBox.edit(5, 5, -5, -5);
+
+      mouseBox(atpa[i].getBounds(), MOUSE_LEFT);
+      wait(randomRange(600, 1200));
+
+      timeout := getSystemTime() + 5000;
+      while getPixelShift(geBox, 150) > 50 do
+      begin
+        if getSystemTime() > timeout then exit();
+
+        mouseBox(atpa[i].getBounds(), MOUSE_LEFT);
+        wait(randomRange(600, 1200));
+      end;
+
+      result := True;
+      exit();
+    end;
+  end;
 end;
 
 (*
@@ -2242,6 +2286,12 @@ begin
       begin
         mouseBox(confirm, MOUSE_LEFT);
         wait(randomRange(1000, 1500));
+        if self.__isWarning() then
+        begin
+          mouseBox(confirm, MOUSE_LEFT);
+          wait(randomRange(1000, 1500));
+        end;
+
         break();
       end;
     end;

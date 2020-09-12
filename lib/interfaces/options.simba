@@ -130,9 +130,10 @@ begin
     exit(false);
   end;
 
-  ATPA := TPA.cluster(5);
+  ATPA := TPA.cluster(3);
   ATPA.sortBySize(true);
 
+  //print('Length of ATPA: ' + toStr(length(ATPA)));
   for i := 0 to high(ATPA) do
   begin
     b := ATPA[i].getBounds();
@@ -148,7 +149,9 @@ begin
         exit(true);
       end;
     end;
+    print('tRSOptions.__find(): Failed - Width: ' + toStr(b.getWidth()) + ', Height: ' + toStr(b.getHeight()));
   end;
+
   print('TRSOptions.__find(): Could not find the options interface', TDebug.WARNING);
 end;
 {$ENDIF}
@@ -189,7 +192,7 @@ begin
       break();
     end;
 
-    wait(randomRange(75, 150));
+    wait(randomRange(150, 250));
   until (getSystemTime() >= t);
 
   print('TRSOptions.isOpen() result: ' + boolToStr(result));

@@ -811,7 +811,7 @@ begin
   end;
 
   t := getTickCount() + 60000;
-  wait(30000);
+  wait(45000);
   while not FindRS() do
   begin
     wait(5000);
