@@ -7,7 +7,7 @@ The Tesseract file stores the functions related tesseract OCR
 The source for this file can be found `here <https://github.com/SRL/SRL-6/blob/master/lib/core/tesseract.simba>`_.
 
 *)
-{$loadlib libtesseract2_}
+{$loadlib libTesseract_}
 
 {$f-}
 

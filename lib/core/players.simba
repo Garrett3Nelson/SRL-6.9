@@ -772,17 +772,20 @@ var
   Process: PtrUInt;
   PID: UInt32;
 begin
+  {$IFDEF WINDOWS}
   PID := GetTargetPID();
 
   Process := OpenProcess($1F0FFF, False, PID);
   TerminateProcess(Process, 0);
   CloseHandle(Process);
+  {$ENDIF}
 end;
 
 function findRS() : Boolean;
 var
   Root, Child: TOSWindow;
 begin
+  {$IFDEF WINDOWS}
   for Root in GetVisibleWindows() do
     if (Root.GetTitle() = 'RuneScape') then
       for Child in Root.GetChildren() do
@@ -793,6 +796,7 @@ begin
           Client.getIOManager().SetTarget(Child);
           exit(True);
         end;
+  {$ENDIF}
 end;
 
 function createRS() : Boolean;
@@ -800,6 +804,7 @@ var
   process : tProcess;
   t : int64;
 begin
+  {$IFDEF WINDOWS}
   try
     Process.init(nil);
     Process.setCommandLine("C:\Program Files\Jagex\RuneScape Launcher\RuneScape.exe");
@@ -826,14 +831,17 @@ begin
   end;
 
   result := True;
+  {$ENDIF}
 end;
 
 function restartRS() : Boolean;
 begin
+  {$IFDEF WINDOWS}
   print('Restarting Runescape.exe');
   if findRS() then killRS();
   wait(5000);
   result := createRS();
+  {$ENDIF}
 end;
 
 {*
@@ -904,7 +912,11 @@ begin
       'Reload_Client':
         begin
           print('RS Update: Going to call EVENT_RS_UPDATE procedure', TDebug.WARNING);
+          {$IFDEF WINDOWS}
           restartRS();
+          {$ELSE}
+          terminateScript();
+          {$ENDIF}
         end;
     end;
 
