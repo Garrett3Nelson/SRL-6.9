@@ -172,7 +172,7 @@ begin
     if (not b.getWidth() = 14) or (not b.getHeight() = 14)
       then continue();
     b.edit(-130, 0, -95, +5);
-    if (pos('LOOT', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+    if (pos('LOOT', upperCase(tesseractOCR.Recognize(b, 50))) > 0) then
     begin
       b.edit(+130, 0, +95, -5);
       self.setBounds([b.x1 - 240, b.y1 - 16, b.x2 + 16, b.y2 + 240]);

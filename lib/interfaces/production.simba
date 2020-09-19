@@ -349,7 +349,7 @@ begin
     b.edit(-2,-2,+2,+2);
     b.setlimit(self.getbounds());
 
-    s := replace(tesseractgettext(b.x1,b.y1,b.x2,b.y2, FILTER_SMALL_CHARS), ' ', '', [rfReplaceAll]);
+    s := replace(TesseractOCR.Recognize(b, 50), ' ', '', [rfReplaceAll]);
 
     for i:=0 to high(skillarray) do
     begin
@@ -621,7 +621,7 @@ begin
     b.edit(-2,-2,+2,+2);
     b.setlimit(self.getbounds());
 
-    result:=trim(tesseractgettext(b.x1,b.y1,b.x2,b.y2, FILTER_SMALL_CHARS));
+    result:=trim(TesseractOCR.Recognize(b, 50));
   end;
 
   print('TRSProductionScreen.getSelectedBoxText(): result = ' + (result), TDebug.SUB);

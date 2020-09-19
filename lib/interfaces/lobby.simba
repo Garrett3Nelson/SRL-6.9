@@ -508,7 +508,11 @@ begin
     fWorlds[i] := -1;
 
     if (countColorTolerance(12484874, boxes[i], 20, colorSetting(1)) > 10) then // Check if fav world exists (Light blue).
-      fWorlds[i] := strToIntDef(tesseract_getText(boxes[i].x1, boxes[i].y1, boxes[i].x2, boxes[i].y2, TTesseractFilter([5, 5, [true, -40, TM_Mean]]), TESS_WHITELIST_NUMBERS), -1);
+    begin
+      TesseractOCR.setWhitelist(STR_NUMBER);
+      fWorlds[i] := strToIntDef(TesseractOCR.Recognize(boxes[i], -40), -1);
+      TesseractOCR.setWhitelist(STR_EVERYTHING);
+    end;
   end;
 
   printf('TRSLobby.quickSelectWorld(): Found worlds %s', [toString(fWorlds)]);

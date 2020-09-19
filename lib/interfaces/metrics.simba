@@ -185,8 +185,6 @@ Example:
 
 *)
 function TRSMetrics.getXP(n: Integer): Integer;
-const
-  filter: TTesseractFilter = [5, 5, [False, 30, TM_Mean]];
 var
   b: TBoxArray;
   s:String;
@@ -199,7 +197,7 @@ begin
     exit(0);
   end;
 
-  s := Tesseract_GetText(b[n-1], filter);
+  s := tesseractOCR.Recognize(b[n-1], 30);
   result := strToIntDef(extractFromStr(s, numbers), 0);
 end;
 

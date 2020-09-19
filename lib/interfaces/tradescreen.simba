@@ -415,7 +415,7 @@ begin
   else
     box.edit(325, 303, - 30, - 7);
 
-  str := Tesseract_GetText(box, TESS_FILTER_SMALL_CHARS);
+  str := tesseractOCR.Recognize(box, 50);
   print('tradeScreen.getValue(): ' + str, TDebug.ERROR);
 
   result := StrToIntDef(ExtractFromStr(str, numbers), 0);

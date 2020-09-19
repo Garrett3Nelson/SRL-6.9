@@ -28,7 +28,7 @@ Scripters can create and use their own filters if they wish.
 
 *)
 const
-  TESS_FILTER_CHATBOX: TTesseractFilter = [3, 3, [False, 35, TM_Mean]];
+  TESS_THRESHOLD_CHATBOX: Integer = 35;
 
   CHATBOX_TRADES = 0;
   CHATBOX_CHALLENGES = 1;
@@ -212,11 +212,11 @@ Example:
     if chatBox.findAnyText(['Hello']) then
       writeLn('We found Hello in the chatBox');
 *)
-function TRSChatBox.findText(txt: TStringArray; const Filter: TTesseractFilter = TESS_FILTER_CHATBOX): boolean;
+function TRSChatBox.findText(txt: TStringArray; const threshold : Integer = TESS_THRESHOLD_CHATBOX): boolean;
 var
   s: string;
 begin
-  s := Tesseract_GetText(Self.getChatArea(), Filter);
+  s := TesseractOCR.Recognize(Self.getChatArea(), threshold);
   if (length(s) > 1) then result := IsArrInStr(txt, s);
 end;
 
@@ -243,13 +243,13 @@ Example:
 
     writeLn(chatBox.getTextOnLine(0));
 *)
-function TRSChatBox.getTextOnLine(Line: Integer; Filter: TTesseractFilter = TESS_FILTER_CHATBOX): String;
+function TRSChatBox.getTextOnLine(Line: Integer; const threshold : Integer = TESS_THRESHOLD_CHATBOX): String;
 begin
   if (not inRange(Line, Low(Self.lineBoxes), High(Self.lineBoxes))) then
     Exit(Print('TRSChatBox.getTextOnLine(): Invaild line', False));
 
   with (Self.lineBoxes[Line]) do
-    Result := Tesseract_GetText(x1, y1, x2, y2, Filter);
+    Result := TesseractOCR.Recognize(intToBox(x1, y1, x2, y2), threshold);
 end;
 
 (*
@@ -276,7 +276,7 @@ Example:
     // returns true if "Hello" or "Hi" is found on the first 4 lines
     chatBox.findTextOnLines(['Hello', 'Hi'], [0..3]);
 *)
-function TRSChatBox.findTextOnLines(txt: TStringArray; lines: TIntegerArray; Filter: TTesseractFilter = TESS_FILTER_CHATBOX): boolean;
+function TRSChatBox.findTextOnLines(txt: TStringArray; lines: TIntegerArray; const threshold : Integer = TESS_THRESHOLD_CHATBOX): boolean;
 var
   i: integer;
   s: string;
@@ -285,7 +285,7 @@ begin
 
   for i := 0 to high(lines) do
   begin
-    s := Self.getTextOnLine(Lines[i], Filter);
+    s := Self.getTextOnLine(Lines[i], threshold);
     if (IsArrInStr(txt, s)) then
     begin
       print('TRSChatBox.findTextOnLines(): Found text '+toStr(txt)+' on line '+intToStr(lines[i]));
@@ -322,7 +322,7 @@ Example:
 *)
 function TRSChatBox.getXPBar(): Integer;
 const
-  Filter: TTesseractFilter = [5, 5, [False, 30, TM_Mean]];
+  threshold: Integer = 30;
 var
   b: TBox;
   i, p: Integer;
@@ -350,7 +350,7 @@ begin
   if (b.getWidth() < 3) or (b.getHeight() < 3) then
     Exit();
 
-  s := Tesseract_GetText(b.X1 - 2, b.Y1 - 5, b.X2 + 2, b.Y2 + 5, Filter);
+  s := TesseractOCR.Recognize(IntToBox(b.X1 - 2, b.Y1 - 5, b.X2 + 2, b.Y2 + 5), threshold);
   p := Pos('xp', s);
   if (p > 0) then
     s := Copy(s, p + 2, Length(s) - (p + 1));

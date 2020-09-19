@@ -371,7 +371,7 @@ begin
   if (FindColors(TPA, 3088905, Self.getBounds())) then
   begin
     Box := GetTPABounds(TPA);
-    Result := StrToIntDef(ExtractFromStr(Tesseract_GetText(Box.x1, Box.y1, Box.x2, Box.y2, TESS_FILTER_SMALL_CHARS_2), Numbers), -1);
+    Result := StrToIntDef(ExtractFromStr(TesseractOCR.Recognize(Box, 55), Numbers), -1);
   end;
 
   print('TRSLobbyWorlds.getCurrentWorld(): Current world is '+toStr(result), TDebug.SUB);
@@ -523,8 +523,8 @@ Example:
 function TRSLobbyWorlds._findWorldNumber(var res: TPoint; wo: integer): boolean;
 const
   Colors = [827845, 13093322];
-  fFilter: TTesseractFilter = [4, 4, [False, 20, TM_Mean]];
-  mFilter: TTesseractFilter = [4, 4, [False, 45, TM_Mean]];
+  fThresh : Integer = 20;
+  mThresh : Integer = 45;
 type
   TWorldBox = record
     Bounds: TBox;
@@ -559,10 +559,13 @@ begin
   for i := 0 to High(WorldBoxes) do
   begin
     n := -1;
+    TesseractOCR.setWhitelist(STR_NUMBER);
     if (WorldBoxes[i].Members) then
-      n := StrToIntDef(Trim(Tesseract_GetText(WorldBoxes[i].Bounds, fFilter, TESS_WHITELIST_NUMBERS)), -1)
+      n := StrToIntDef(Trim(TesseractOCR.Recognize(WorldBoxes[i].Bounds, fThresh)), -1)
     else
-      n := StrToIntDef(Trim(Tesseract_GetText(WorldBoxes[i].Bounds, mFilter, TESS_WHITELIST_NUMBERS)), -1);
+      n := StrToIntDef(Trim(TesseractOCR.Recognize(WorldBoxes[i].Bounds, mThresh)), -1);
+
+    TesseractOCR.setWhitelist(STR_EVERYTHING);
     if (n = wo) then
       begin
         res := MiddleBox(WorldBoxes[i].Bounds);

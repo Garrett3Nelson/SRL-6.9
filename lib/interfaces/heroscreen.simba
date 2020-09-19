@@ -142,7 +142,7 @@ begin
     b := ATPA[i].getBounds();
     if b.getWidth() < 100 then continue();
 
-    if (pos('HERO', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+    if (pos('HERO', upperCase(tesseractOCR.Recognize(b, 50))) > 0) then
     begin
       self.setBounds([b.x1 - 68, b.y1 - 5, b.x2 + 549, b.y2 + 511]);
       exit(true);

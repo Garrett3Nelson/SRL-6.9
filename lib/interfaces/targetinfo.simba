@@ -343,7 +343,7 @@ begin
   b := self.getBounds();
   b.edit(17, 1, -60, -12);
 
-  result := Tesseract_GetText(b, TESS_FILTER_CHATBOX);
+  result := tesseractOCR.Recognize(b, TESS_THRESHOLD_CHATBOX);
   print('TRSTargetInfo.getName(): ' + result);
 end;
 
@@ -409,7 +409,7 @@ Example:
 function TRSTargetInfo.getCombat(): byte;
 begin
   if self.__find('fast') then
-    exit(strtoint(Tesseract_GetText(self.getBounds(), TESS_FILTER_CHATBOX)));
+    exit(strtoint(tesseractOCR.Recognize(self.getBounds(), TESS_THRESHOLD_CHATBOX)));
 end;
 
 begin

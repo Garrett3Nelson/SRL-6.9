@@ -293,7 +293,7 @@ begin
   if (not self.isOpen()) then
     exit();
 
-  result := replace(tesseractGetText(self.x + 120, self.y, self.x + self.w - 8, self.y + 25, FILTER_SMALL_CHARS), ' ', '', [rfReplaceAll]);
+  result := replace(TesseractOCR.Recognize(intToBox(self.x + 120, self.y, self.x + self.w - 8, self.y + 25), 50), ' ', '', [rfReplaceAll]);
 end;
 
 (*
@@ -357,7 +357,7 @@ begin
   end;
 
   b := self.getChatBounds();
-  result := trim(tesseractGetText(b.x1, b.y1, b.x2, b.y2, FILTER_NPC_CHAT_CHARS));
+  result := trim(TesseractOCR.Recognize(b, -50));
 
   print('TRSConversationBox.getChat(): Text found: ' + result, TDebug.SUB);
 end;
@@ -457,7 +457,7 @@ begin
   setLength(result, length(optionBoxes));
 
   for i := 0 to high(optionBoxes) do
-    result[i]:= Tesseract_GetText(optionBoxes[i], TESS_FILTER_SMALL_CHARS);
+    result[i]:= TesseractOCR.Recognize(optionBoxes[i], 50);
 
   print('TRSConversationBox.getOptions(): Options found: ' + toStr(result), TDebug.SUB);
 end;

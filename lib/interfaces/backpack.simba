@@ -1195,7 +1195,7 @@ begin
 
   b := intToBox(gameTabs.TabArea.x1 + 147, gameTabs.TabArea.y2 - 30, gameTabs.TabArea.x2 - 25, gameTabs.TabArea.y2 - 10);
 
-  s := replace(tesseract_getText(b.x1, b.y1, b.x2, b.y2, TTesseractFilter([5, 5, [false, 30, TM_Mean]])), ' ', '', [rfReplaceAll]);
+  s := replace(TesseractOCR.Recognize(b, 30), ' ', '', [rfReplaceAll]);
   result := strToIntDef(extractFromStr(s, numbers), 0);
 
   if pos('K', s) > 0 then
@@ -1240,7 +1240,7 @@ begin
 
   for 0 to 1 do
   begin
-    if (pos('ble', tesseract_GetText(b, TESS_FILTER_SMALL_CHARS)) > 0) then
+    if (pos('ble', TesseractOCR.Recognize(b, 50)) > 0) then
       exit(true);
     b.edit(0, 27, 0, 27);
   end;

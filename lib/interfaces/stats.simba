@@ -339,14 +339,14 @@ var
   i, p: integer;
   s: string;
   boxArr: TBoxArray;
-  tesseractFilter: TTesseractFilter = [3, 3, [true, 40, TM_Mean]];
+  threshold : Integer = 40;
 begin
   result := -1;
 
   if (not self.open()) then
     exit();
 
-  if infoType = INFO_BONUS_XP then tesseractFilter := [2, 2, [true, 10, TM_Mean]];
+  if infoType = INFO_BONUS_XP then threshold := 10;
   mouseBox(tabStats.getSkillBox(skill));
 
   if isMouseOverMenuOpen(b, 1000 + random(100)) then
@@ -356,7 +356,7 @@ begin
 
     for i := 0 to high(boxArr) do
     begin
-      s := tesseract_GetText(boxArr[i], tesseractFilter);
+      s := TesseractOCR.Recognize(boxArr[i], threshold);
       p := pos(infoType, s);
 
       if (p > 0) then

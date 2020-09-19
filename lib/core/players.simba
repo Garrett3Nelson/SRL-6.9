@@ -980,7 +980,7 @@ begin
         b.edit(7, 85, -7, -yDiff);
 
         if inRange(b.getWidth(), 200, 260) and (b.getHeight() > 24) then
-          result := trim(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS_2));
+          result := trim(tesseractOCR.Recognize(b, 55));
       end;
     end;
 end;
@@ -997,7 +997,7 @@ begin
     atpa := textTPA.cluster(10);
     ATPA.sortBySize(true);
 
-    result := (stringMatch(lowercase(tesseract_getText(ATPA[0].getBounds(), [3, 3, [False, 25, TM_MEAN]])),'authenticator') > 0.75);
+    result := (stringMatch(lowercase(tesseractOCR.Recognize(ATPA[0].getBounds(), 25)),'authenticator') > 0.75);
   end;
 end;
 

@@ -567,7 +567,7 @@ begin
       if inRange(b.getWidth(), 35, 45) then
       begin
         b.edit(50, -15, 127, -6);
-        if (pos('POWER', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+        if (pos('POWER', upperCase(TesseractOCR.Recognize(b, 50))) > 0) then
         begin
           self.setBounds([b.x1 - 88, b.y1 - 9, b.x2 + 578, b.y2 + 512]);
           exit(true);

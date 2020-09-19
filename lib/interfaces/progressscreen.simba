@@ -251,7 +251,7 @@ begin
     b.edit(-2, -2, +2, +2);
     b.setlimit(self.getbounds());
 
-    s:= replace(tesseract_GetText(b, FILTER_SMALL_CHARS), ' ', '', [rfReplaceAll]);
+    s:= replace(TesseractOCR.Recognize(b, 50), ' ', '', [rfReplaceAll]);
 
     for i := 0 to high(skillArray) do
       if (pos(lowerCase(skillArray[i]), lowerCase(s)) > 0) then
@@ -410,7 +410,7 @@ begin
     b.edit(-2, -2, +2, +2);
     b.setLimit(self.getBounds());
 
-    result := trim(tesseract_GetText(b, FILTER_SMALL_CHARS));
+    result := trim(TesseractOCR.Recognize(b, 50));
   end;
 
   print('TRSProgressScreen.getItem(): result = ' + (result), TDebug.SUB);
@@ -480,8 +480,6 @@ Example:
       writeln('We are making 25 items!');
 *)
 function TRSProgressScreen.getTotalToMake(): integer;
-const
-  PROGRESS_FILTER_SMALL_CHARS: TTesseractFilter = [10, 10, [false, 50, TM_Mean]];
 var
   b: TBox;
   tpa : TPointArray;
@@ -505,7 +503,7 @@ begin
     b.edit(-2, -2, +2, +2);
     b.setlimit(self.getbounds());
 
-    s := trim(Tesseract_GetText(b, PROGRESS_FILTER_SMALL_CHARS));
+    s := trim(TesseractOCR.Recognize(b, 50));
 
     p := pos('x', lowercase(s));
     if p > 0 then

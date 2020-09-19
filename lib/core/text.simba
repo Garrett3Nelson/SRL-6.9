@@ -688,7 +688,7 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function __getMouseOverTextTess(const box: TBox): string;
 begin
-  result := Tesseract_GetText(box.x1, box.y1, box.x2, box.y2, TTesseractFilter([3, 3, [false, 30, TM_Mean]]));
+  result := TesseractOCR.Recognize(box, 30);
 end;
 {$ENDIF}
 

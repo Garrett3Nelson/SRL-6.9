@@ -22,8 +22,6 @@ SRL library isn't available to you.
 {$include_once lib/utilities/color.simba}
 {$include_once lib/utilities/otp.simba}
 
-{$include_once lib/core/tesseract.simba}
-
 {$include_once lib/core/text.simba}
 {$include_once lib/interfaces/interfaces.simba}
 {$include_once lib/interfaces/chooseoption.simba}

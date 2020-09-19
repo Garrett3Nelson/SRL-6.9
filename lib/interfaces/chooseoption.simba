@@ -25,7 +25,7 @@ The following constants, types and variables are used throughout the chooseOptio
 
 *)
 const
-  TESS_FILTER_CHOOSE_OPTION: TTesseractFilter = [4, 4, [False, 15, TM_Mean]];
+  TESS_THRESHOLD_CHOOSE_OPTION : Int32 = 15;
 
 (*
 **type TOption**
@@ -301,7 +301,7 @@ Example:
         mouseBox(opts[0].bounds, MOUSE_LEFT);
     end;
 *)
-function TRSChooseOption.getOptions(useTesseract: boolean = false; Filter: TTesseractFilter = TESS_FILTER_CHOOSE_OPTION): TOptionArray;
+function TRSChooseOption.getOptions(useTesseract: boolean = false; threshold : Integer = TESS_THRESHOLD_CHOOSE_OPTION): TOptionArray;
 var
   w, h, bmp, wid, hei, i, oldTarget, t: integer;
   options, client : TBox;
@@ -334,7 +334,7 @@ begin
       if not useTesseract then
         result[i].str := getTextAtEx(result[i].bounds, 0, 5, 5, clRed, 0, 'UpCharsEx')
       else
-        result[i].str := Tesseract_GetText(result[i].bounds, Filter);
+        result[i].str := TesseractOCR.Recognize(result[i].bounds, threshold);
       result[i].bounds.offset(point(self.x1, self.y1));  // offset so its back on the mainscreen
       result[i].bounds.shrink(1);
       print('TRSChooseOption.getOptions(): option '+ toStr(i + 1) + ': "' +result[i].str+'"', TDebug.SUB);
@@ -423,7 +423,7 @@ Example:
 
     chooseOption.__select(['alk', 'lk To'], MOUSE_LEFT, true, 1.00, 150, true);
 *}
-function TRSChooseOption.__select(txt: TStringArray; mouseAction: integer; closeAfter: boolean; matchPercent: extended; waitTime: integer; useTesseract: boolean;  filter: TTesseractFilter): boolean;
+function TRSChooseOption.__select(txt: TStringArray; mouseAction: integer; closeAfter: boolean; matchPercent: extended; waitTime: integer; useTesseract: boolean;  threshold : Integer): boolean;
 var
   optionArr: TOptionArray;
   i, j: integer;
@@ -439,7 +439,7 @@ begin
     exit();
   end;
 
-  optionArr := self.getOptions(useTesseract, filter);
+  optionArr := self.getOptions(useTesseract, threshold);
 
   if (length(optionArr) > 0) then
   begin
@@ -515,9 +515,9 @@ Example:
     chooseOption.select(['Walk here']);
     chooseOption.select(['Walk here'], 250, True); // To use tesseract
 *)
-function TRSChooseOption.select(txt: TStringArray; waitTime: integer = 250; useTesseract: boolean = false; filter: TTesseractFilter = TESS_FILTER_CHOOSE_OPTION): boolean; overload;
+function TRSChooseOption.select(txt: TStringArray; waitTime: integer = 250; useTesseract: boolean = false; threshold : Integer = TESS_THRESHOLD_CHOOSE_OPTION): boolean; overload;
 begin
-  result := self.__select(txt, MOUSE_LEFT, true, 1.00, waitTime, useTesseract, filter);
+  result := self.__select(txt, MOUSE_LEFT, true, 1.00, waitTime, useTesseract, threshold);
 end;
 
 (*
@@ -548,7 +548,7 @@ Example:
 *)
 function TRSChooseOption.select(txt: TStringArray; matchPercent: extended; waitTime: integer = 250): boolean; overload;
 begin
-  result := self.__select(txt, MOUSE_LEFT, true, matchPercent, waitTime, false, TESS_FILTER_CHOOSE_OPTION);
+  result := self.__select(txt, MOUSE_LEFT, true, matchPercent, waitTime, false, TESS_THRESHOLD_CHOOSE_OPTION);
 end;
 
 (*
@@ -581,9 +581,9 @@ Example:
 
     chooseOption.select(['Bank'], MOUSE_MOVE, 300, false); // Will move the mouse to the option but not click
 *)
-function TRSChooseOption.select(txt: TStringArray; mouseAction, waitTime: Integer; useTesseract: Boolean;  filter: TTesseractFilter = TESS_FILTER_CHOOSE_OPTION): boolean; overload;
+function TRSChooseOption.select(txt: TStringArray; mouseAction, waitTime: Integer; useTesseract: Boolean;  threshold : Integer = TESS_THRESHOLD_CHOOSE_OPTION): boolean; overload;
 begin
-  result := self.__select(txt, mouseAction, false, 1.00, waitTime, useTesseract, filter);
+  result := self.__select(txt, mouseAction, false, 1.00, waitTime, useTesseract, threshold);
 end;
 
 (*

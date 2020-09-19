@@ -143,7 +143,7 @@ begin
       tb := b;
       tb.edit(round(b.getWidth()*0.3), 0, -round(b.getWidth()*0.3), 0);
 
-      if (pos('OPTIONS', upperCase(tesseract_GetText(tb, TESS_FILTER_SMALL_CHARS))) > 0) then
+      if (pos('OPTIONS', upperCase(TesseractOCR.Recognize(tb, 50))) > 0) then
       begin
         self.setBounds([b.x1, b.y1 - 3, b.x2, b.y1 + 226]);
         exit(true);
@@ -294,7 +294,7 @@ begin
     if ((b.X2 - b.X1) > 30) then
     begin
       Insert(b, Buttons);
-      Insert(Tesseract_GetText(b, TESS_FILTER_SMALL_CHARS_2), Texts);
+      Insert(TesseractOCR.Recognize(b, 55), Texts);
     end;
   end;
 end;

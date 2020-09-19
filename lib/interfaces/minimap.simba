@@ -3264,7 +3264,9 @@ begin
   FindColorsTolBitmap(bmp, TPA, $FFFFFF, [0,0,w-1,h-1], Trunc(441.6*0.4));
   FastDrawClear(bmp, 0);
   DrawTPABitmap(bmp, TPA, $FFFFFF);
-  tmpVar := Tesseract_GetText(bmp, TESS_WHITELIST_NUMBERS+'%');
+  TesseractOCR.setWhitelist(STR_NUMBER+'%');
+  tmpVar := TesseractOCR.Recognize(getMufasaBitmap(bmp));
+  TesseractOCR.setWhitelist(STR_EVERYTHING);
   Result := StrToIntDef(ExtractFromStr(tmpVar, NUMBERS), -1);
 
   FreeBitmap(bmp);

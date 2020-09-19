@@ -153,7 +153,7 @@ begin
     b := ATPA[i].getBounds();
     if (b.getWidth() < 140) or (b.getHeight() > 30) then continue();
 
-    if (pos('COLLECTION BOX', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+    if (pos('COLLECTION BOX', upperCase(TesseractOCR.Recognize(b, 50))) > 0) then
     begin
       b.edit(-2, -2, 198, 268);
       self.setBounds(b);

@@ -161,7 +161,7 @@ begin
     begin
       b.edit(21, -10, 114, 12);
 
-      if (pos('GRAND', upperCase(tesseract_GetText(b, TESS_FILTER_SMALL_CHARS))) > 0) then
+      if (pos('GRAND', upperCase(TesseractOCR.Recognize(b, 50))) > 0) then
       begin
         self.setBounds([b.x1 - 88, b.y1 - 8, b.x2 + 570, b.y2 + 515]);
         setLength(self.tabBoxes, 4);
@@ -1221,8 +1221,8 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function TRSGrandExchange.__enterName(itemName: string): boolean;
 const
-  TESS_FILTER_GE_CHARS: TTesseractFilter = [5, 5, [False, 15, TM_Mean]];
-  TESS_FILTER_GE_CHARS_BACKUP: TTesseractFilter = [3, 4, [False, 18, TM_Mean]];
+  TESS_THRESHOLD_GE_CHARS: Integer = 15;
+  TESS_THRESHOLD_GE_CHARS_BACKUP: Integer = 25;
 var
   i, beforeBMP, afterBMP, textIndex, tries, w, h : integer;
   timeOut: UInt64;
@@ -1278,20 +1278,21 @@ begin
         textBox.edit(-4, -4, 3, 3); // Tesseract works better with some empty space around text
 
         // Create a custom whitelist of letters, any numbers that are in the name, and any special chars like (/,)
-        TESS_WHITELIST := TESS_WHITELIST_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
-
+        TESS_WHITELIST := STR_LETTERS + extractFromStr(itemName, numbers) + replace(extractFromStr(itemName, others), ' ', '', [rfReplaceAll]);
+        tesseractOCR.setWhitelist(TESS_WHITELIST);
         // Two tesseract filters are required, sometimes one works better than the other
-        tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS, TESS_WHITELIST);
+        tempText := tesseractOCR.Recognize(textBox, TESS_THRESHOLD_GE_CHARS);
         tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
         tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
 
         tNameArr.append(tempText);
 
-        tempText := Tesseract_GetText(textBox, TESS_FILTER_GE_CHARS_BACKUP, TESS_WHITELIST);
+        tempText := tesseractOCR.Recognize(textBox, TESS_THRESHOLD_GE_CHARS_BACKUP);
         tempText := replace(tempText, chr(10), " ", [rfReplaceAll]);
         tempText := replace(tempText, chr(13), " ", [rfReplaceAll]);
 
         tNameArr2.append(tempText);
+        tesseractOCR.setWhitelist(STR_EVERYTHING);
 
         print('TRSGrandExchange.__enterName(): At result '+ toStr(i) + ': ' + tNameArr[i] + ' / ' + tNameArr2[i], TDebug.DEBUG);
       end;
