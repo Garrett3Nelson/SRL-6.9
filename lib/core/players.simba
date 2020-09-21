@@ -772,12 +772,13 @@ var
   Process: PtrUInt;
   PID: UInt32;
 begin
-  {$IFDEF WINDOWS}
   PID := GetTargetPID();
-
+  {$IFDEF WINDOWS}
   Process := OpenProcess($1F0FFF, False, PID);
   TerminateProcess(Process, 0);
   CloseHandle(Process);
+  {$ELSE}
+  runCommand('kill -9 ' +toStr(PID));
   {$ENDIF}
 end;
 
@@ -785,9 +786,9 @@ function findRS() : Boolean;
 var
   Root, Child: TOSWindow;
 begin
-  {$IFDEF WINDOWS}
   for Root in GetVisibleWindows() do
     if (Root.GetTitle() = 'RuneScape') then
+      {$IFDEF WINDOWS}
       for Child in Root.GetChildren() do
         if (Child.GetClassName() = 'JagOpenGLView') then
         begin
@@ -796,7 +797,14 @@ begin
           Client.getIOManager().SetTarget(Child);
           exit(True);
         end;
-  {$ENDIF}
+      {$ELSE}
+      begin
+        WriteLn('Found: ', Root);
+
+        Client.getIOManager().SetTarget(Root);
+        exit(True);
+      end;
+      {$ENDIF}
 end;
 
 function createRS() : Boolean;
@@ -804,10 +812,13 @@ var
   process : tProcess;
   t : int64;
 begin
-  {$IFDEF WINDOWS}
   try
     Process.init(nil);
+    {$IFDEF WINDOWS}
     Process.setCommandLine("C:\Program Files\Jagex\RuneScape Launcher\RuneScape.exe");
+    {$ELSE}
+    Process.setCommandLine("snap run runescape.rs3");
+    {$ENDIF}
     Process.Execute();
   except
     exit(False);
@@ -831,17 +842,14 @@ begin
   end;
 
   result := True;
-  {$ENDIF}
 end;
 
 function restartRS() : Boolean;
 begin
-  {$IFDEF WINDOWS}
-  print('Restarting Runescape.exe');
+  print('Restarting Runescape');
   if findRS() then killRS();
   wait(5000);
   result := createRS();
-  {$ENDIF}
 end;
 
 {*
@@ -912,11 +920,7 @@ begin
       'Reload_Client':
         begin
           print('RS Update: Going to call EVENT_RS_UPDATE procedure', TDebug.WARNING);
-          {$IFDEF WINDOWS}
           restartRS();
-          {$ELSE}
-          terminateScript();
-          {$ENDIF}
         end;
     end;
 
