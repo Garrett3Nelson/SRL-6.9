@@ -1092,7 +1092,7 @@ begin
     ['Player in member-only area',            0,         0,  'Set_Member'],
     ['Error connecting',                      20000,     4,  'Terminate'],
     ['Unable to connect',                     20000,     4,  'Terminate'],
-    ['Runescape has been updated',            0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
+    ['RuneScape has been updated',            0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
     ['Client token changed',                  0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
     ['session has now ended',                 0,         0,  'Reload_Client'],         //Reload_Client needs to be fixed
     ['Our systems are currently unavailable', 3 * 60000, 8,  'Reload_Client'],         //Reload_Client needs to be fixed
