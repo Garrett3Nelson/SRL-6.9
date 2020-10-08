@@ -63,7 +63,7 @@ Example:
 *)
 function waitClientReady(): boolean;
 var
-  t: UInt32;
+  t: Int64;
   i: integer;
 begin
   result := false;

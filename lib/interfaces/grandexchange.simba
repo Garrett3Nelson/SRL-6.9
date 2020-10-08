@@ -1308,7 +1308,7 @@ begin
 
       if length(inputBox) = 0 then inputBox := self.__getInputBoxes();
       getClientDimensions(w,h);
-      safeBox := intToBox(0,0,w,self.y1);
+      safeBox := intToBox(self.x2,0,w-1,h-1);
       mouseBox(safeBox, MOUSE_MOVE);
       tNameArr := [];
       tNameArr2 := [];
@@ -2024,7 +2024,7 @@ function TRSGrandExchange.__getProgressCount(geSlot: integer): integer;
 const
   BG_COLORS = [2500653, 1974051, 2565929, 2039584, 3092529, 2434598, 3026997];
 var
-  i, x, y, hoverCount: integer;
+  i, x, y, w, h, hoverCount: integer;
   TBA: TBoxArray := self.__getSlotBoxes();
 begin
   if self.__isSlotEmpty(geSlot) or (not self.__isSlotActive(geSlot)) then exit(-1);
@@ -2036,7 +2036,8 @@ begin
   if hoverCount > 0 then // We are hovering and obscuring the bar
   begin
     print('tRSGrandExchange.__getProgressCount(): hoverCount = ' + toStr(hoverCount));
-    mouseBox(intToBox(0,0,self.x2, self.y1), MOUSE_MOVE);
+    getClientDimensions(w,h);
+    mouseBox(intToBox(self.x2, 0, w-1, h-1), MOUSE_MOVE);
     wait(randomRange(100,200));
   end;
 
