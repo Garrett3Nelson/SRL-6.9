@@ -11,6 +11,8 @@
   {$ENDIF}
 {$ENDIF}
 
+{$IFDEF NAS_DRAWING}
+{$ELSE}
 const
   GW_HWNDFIRST = 0;
   GW_HWNDLAST = 1;
@@ -25,6 +27,7 @@ const
 const
   SM_CXSCREEN = 0;
   SM_CYSCREEN = 1;
+{$ENDIF}
 
 function GetTopWindow(Handle: HWND):HWND; external 'GetTopWindow@user32.dll' + WINAPI_CC;
 function GetNextWindow(Handle: HWND; CMD: UInt32): HWND; external 'GetWindow@user32.dll' + WINAPI_CC;
