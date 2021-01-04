@@ -68,7 +68,7 @@ begin
   if GetForegroundWindow() <> Handle then
   begin
     Current := GetWindowThreadProcessID(GetForegroundWindow(), PID);
-    Thread := GetCurrThreadID();
+    Thread := GetCurrentThreadID();
 
     if (Current <> Thread) then
       AttachThreadInput(Current, Thread, True);
