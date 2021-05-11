@@ -600,10 +600,10 @@ Example:
     tmb.drawText('hello world!', point(55, 55), clLime);
 
 *)
-procedure TMufasaBitmap.drawText(txt: string; pnt: TPoint; color: TColor); constref; overload;
+{procedure TMufasaBitmap.drawText(txt: string; pnt: TPoint; color: TColor); constref; overload;
 begin
   self.drawText(txt, pnt, 'StatChars', true, color);
-end;
+end;   }
 
 (*
 TMufasaBitmap.drawClippedText

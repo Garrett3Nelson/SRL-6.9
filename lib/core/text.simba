@@ -843,7 +843,8 @@ var
   UpTextArea: TBox := [4, 5, 500, 25];
   UpTextFilter: TCompareRules := [-1, 85, True, 60];
 begin
-  result := ocr.recognize(UpTextArea, UpTextFilter, UpFont);
+  //result := ocr.recognize(UpTextArea, UpTextFilter, UpFont);
+  result := ocr.recognize(UpTextArea, UpTextFilter);
   print('getUpText(): '+toStr(result));
 end;
 
