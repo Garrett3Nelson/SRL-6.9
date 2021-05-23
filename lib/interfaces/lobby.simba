@@ -166,26 +166,25 @@ var
   TPA: TPointArray;
   ATPA: T2DPointArray;
 begin
-  if findColorsTolerance(TPA, 1579844, getClientBounds(), 17) then
+  if findColorsTolerance(TPA, 1644867, getClientBounds(), 22) then
   begin
     ATPA := TPA.cluster(1);
     ATPA.sortBySize();
     for i := 0 to high(ATPA) do
-    if inRange(length(ATPA[i]), 2500, 3500) then
+    if inRange(length(ATPA[i]), 1200, 2000) then
+    begin
+      b := ATPA[i].getbounds();
+      if inRange(b.getWidth(), 90, 110) and inRange(b.getHeight(), 22, 34) then
       begin
-        b := ATPA[i].getbounds();
-        if inRange(b.getWidth(), 138, 140) and inRange(b.getHeight(), 32, 34) then
-        begin
-          print('TRSLobby.__findLobby(): Found the bordeau Lobby-banner.', TDebug.SUB);
-          self.tabBoxes := grid(6, 1, 45, 22, 100, 0, point(b.x1 - 15, b.y1 + 108));
+        print('TRSLobby.__findLobby(): Found the Lobby-banner.', TDebug.SUB);
+        self.tabBoxes := grid(6, 1, 45, 22, 100, 0, point(b.x1 - 15, b.y1 + 108));
 
-          b.edit(-85, 90, 545, 515);
-          self.setbounds(b);
-
-          exit(true);
-        end;
+        b.edit(-2, 23, 691, 543);
+        self.setbounds(b);
+        exit(true);
       end;
     end;
+  end;
 end;
 
 
@@ -254,7 +253,7 @@ var
   tpa: TPointArray;
   atpa: T2DPointArray;
   i: integer;
-  ButtonColor: TColorData := [2136805, 15, [2, [0.17, 0.98, 0.00]]];
+  ButtonColor: TColorData := [5421297, 16, [2, [0.18, 1.02]]];
 begin
   print('TRSLobby.findPlayButton()', TDebug.HEADER);
   if ButtonColor.gatherIn(TPA, getClientBounds()) then
@@ -264,11 +263,12 @@ begin
 
     for i := 0 to high(atpa) do
       begin
+        writeln(length(ATPA[i]));
         if (length(ATPA[i]) < 1000) then
           break;    //break only works because APTA has been sorted before this loop
         b := atpa[i].getBounds();
 
-        if inRange(b.getWidth(), 170, 180) then
+        if inRange(b.getWidth(), 170, 250) then
         begin
           result := true;
           break;
