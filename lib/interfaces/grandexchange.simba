@@ -165,10 +165,10 @@ begin
       begin
         self.setBounds([b.x1 - 88, b.y1 - 8, b.x2 + 570, b.y2 + 515]);
         setLength(self.tabBoxes, 4);
-        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 100, self.x1 + 156, self.y1+ 124]; // Grand Exchange
-        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 100, self.x1 + 262, self.y1+ 124]; // History
-        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 100, self.x1 + 336, self.y1+ 124]; // Sets
-        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 100, self.x1 + 437, self.y1+ 124]; // Favourites
+        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 107, self.x1 + 156, self.y1+ 123]; // Grand Exchange
+        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 107, self.x1 + 262, self.y1+ 123]; // History
+        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 107, self.x1 + 336, self.y1+ 123]; // Sets
+        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 107, self.x1 + 437, self.y1+ 123]; // Favourites
         exit(true);
       end;
     end;
@@ -2208,7 +2208,8 @@ var
   i, nextSlot, tries, x, y, hoverCount: integer;
   packBox : tBox;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
-  offerBox : TBox := [self.x1 + 18, self.y1 + 141, self.x1 + 548, self.y1 + 535];
+  offerBox : TBox := [self.x1 + 18, self.y1 + 141, self.x1 + 548, self.y1 + 535]; // The main offer screen
+  hoverBox : TBox := [self.x1 + 18, self.y1 + 141, self.x1 + 482, self.y1 + 535]; // The area we don't want covered by hover text
 begin
   if not self.isOpen() then
   begin
@@ -2252,12 +2253,13 @@ begin
       exit(false);
     end;
 
-    hoverCount := countColorTolerance(855309, intToBox(x+1, y, x+152, y+2), 6, colorSetting(2, 0.01, 0.01));
+    hoverCount := countColorTolerance(855309, hoverBox, 6, colorSetting(2, 0.01, 0.01));
 
-    if hoverCount > 0 then // We are hovering and obscuring the offer
-    begin
+    if hoverCount > 4500 then // We are hovering and obscuring the offer
+    begin                     // Depending on items in the offer (black outline increases count)
+                              // The normal count is approximately 4450
       print('tRSGrandExchange.sellItem(): hoverCount = ' + toStr(hoverCount));
-      mouseBox(offerBox, MOUSE_MOVE);
+      mouseBox(hoverBox, MOUSE_MOVE);
       wait(randomRange(100,200));
     end;
 
@@ -2273,6 +2275,16 @@ begin
 
   if self.__isOfferOpen(3000) then
   begin
+    hoverCount := countColorTolerance(855309, hoverBox, 6, colorSetting(2, 0.01, 0.01));
+
+    if hoverCount > 4500 then // We are hovering and obscuring the offer
+    begin                     // Depending on items in the offer (black outline increases count)
+                              // The normal count is approximately 4450
+      print('tRSGrandExchange.sellItem(): hoverCount = ' + toStr(hoverCount));
+      mouseBox(hoverBox, MOUSE_MOVE);
+      wait(randomRange(400,600));
+    end;
+
     if length(self.__getInputBoxes()) < 2 then
     begin
       print('TRSGrandExchange.sellItem(): Both input boxes not visible yet, waiting');

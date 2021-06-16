@@ -23,7 +23,7 @@ Example
     mouseSpeed := 50;
 *)
 var
-  mouseSpeed: Integer = 20;
+  mouseSpeed: Integer = 70;
 
 {*
 _brakeWindMouse

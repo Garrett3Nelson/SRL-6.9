@@ -71,7 +71,7 @@ var
   timecode : Int64;
 begin
   timecode := trunc(DateTimeToUnix(Now, False) / 30);
-
+  writeln timecode;
   byteSecret := base32Decode(secret);
   timeSecret := magic(timeCode);
 

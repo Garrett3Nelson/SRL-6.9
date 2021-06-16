@@ -263,7 +263,7 @@ begin
 
     for i := 0 to high(atpa) do
       begin
-        writeln(length(ATPA[i]));
+        //writeln(length(ATPA[i]));
         if (length(ATPA[i]) < 1000) then
           break;    //break only works because APTA has been sorted before this loop
         b := atpa[i].getBounds();

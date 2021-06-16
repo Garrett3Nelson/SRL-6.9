@@ -160,7 +160,7 @@ begin
 
   if (__logFile >= 0) then
     try
-      writeFileString(__logFile, '[' + msToTime(getTimeRunning(), TIME_BARE) + ']: ' + s + #13 + #10);
+      writeFileString(__logFile, '[' + msToTime(getTimeRunning(), TIME_BARE) + ']/[' + theTime() + '] : ' + s + #13 + #10);
     except
       writeLn('Could not write to log file');
     end;
