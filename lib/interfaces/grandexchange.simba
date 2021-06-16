@@ -165,10 +165,10 @@ begin
       begin
         self.setBounds([b.x1 - 88, b.y1 - 8, b.x2 + 570, b.y2 + 515]);
         setLength(self.tabBoxes, 4);
-        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 107, self.x1 + 156, self.y1+ 123]; // Grand Exchange
-        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 107, self.x1 + 262, self.y1+ 123]; // History
-        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 107, self.x1 + 336, self.y1+ 123]; // Sets
-        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 107, self.x1 + 437, self.y1+ 123]; // Favourites
+        self.tabBoxes[0] := [self.x1 + 27, self.y1 + 107, self.x1 + 156, self.y1+ 124]; // Grand Exchange
+        self.tabBoxes[1] := [self.x1 + 167, self.y1 + 107, self.x1 + 262, self.y1+ 124]; // History
+        self.tabBoxes[2] := [self.x1 + 276, self.y1 + 107, self.x1 + 336, self.y1+ 124]; // Sets
+        self.tabBoxes[3] := [self.x1 + 350, self.y1 + 107, self.x1 + 437, self.y1+ 124]; // Favourites
         exit(true);
       end;
     end;
