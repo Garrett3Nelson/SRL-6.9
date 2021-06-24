@@ -1221,8 +1221,8 @@ Example:
 {$IFNDEF CODEINSIGHT}
 function TRSGrandExchange.__enterName(itemName: string): boolean;
 const
-  TESS_THRESHOLD_GE_CHARS: Integer = 15;
-  TESS_THRESHOLD_GE_CHARS_BACKUP: Integer = 25;
+  TESS_THRESHOLD_GE_CHARS: Integer = 20;
+  TESS_THRESHOLD_GE_CHARS_BACKUP: Integer = 40;
 var
   i, beforeBMP, afterBMP, textIndex, tries, w, h : integer;
   timeOut: UInt64;
@@ -1232,9 +1232,9 @@ var
   inputBox: TBoxArray;
   tempText, TESS_WHITELIST: String;
   tNameArr, tNameArr2 : TStringArray;
-  textCol : integer := 7759429;
-  textTol : integer := 18;
-  textCTS : tColorSettings := [2, [0.02, 0.54]];
+  textCol : integer := 7891274;
+  textTol : integer := 17;
+  textCTS : tColorSettings := [2, [0.02, 0.44]];
   textTPA : tPointArray;
   textBox, tempBox, safeBox : tBox;
   bestMatch : Extended;
@@ -1400,27 +1400,35 @@ var
   backButton: TPoint := [self.x1 + 33, self.y1 + 515];
   timeOut: UInt64;
 begin
-  if self.__isOfferOpen() or self.__isProgressOpen() then
+  timeOut := GetTickCount() + randomRange(3500, 5500);
+  if (self.__isOfferOpen() or self.__isProgressOpen()) then
   begin
     print('TRSGrandExchange._returnToSummary(): returning to summary screen', TDebug.SUB);
 
-    timeOut := GetTickCount() + randomRange(2500, 3500);
-    while GetTickCount() < timeOut do
-    begin
-      if not useHotkey then
-        mouse(backButton.rand(5), MOUSE_LEFT)
-      else
-        typeByte(VK_ESCAPE); // Added escape hotkey
-      wait(randomRange(500, 750));
+    if not useHotkey then
+      mouse(backButton.rand(5), MOUSE_LEFT)
+    else
+      typeByte(VK_ESCAPE); // Added escape hotkey
 
-      if ((not self.__isOfferOpen()) and (not self.__isProgressOpen())) then
-        break()
-      else if useHotKey then useHotkey := False;
+    print('TRSGrandExchange._returnToSummary(): Clicked to return, waiting for main screen to load', TDebug.SUB);
+    wait(randomRange(1000, 1500));
+
+    while (self.__isOfferOpen() or self.__isProgressOpen()) do
+    begin
+      if GetTickCount() > timeout then
+      begin
+        print('TRSGrandExchange._returnToSummary(): Timed out trying to return to main', TDebug.WARNING);
+        exit();
+      end;
 
       mouseBox(self.getBounds(), MOUSE_MOVE);
-      wait(randomRange(250,400));
+      wait(randomRange(300,600)); // To move the mouse away from the button (if we barely misclicked)
+
+      mouse(backButton.rand(5), MOUSE_LEFT);
+      wait(randomRange(1000, 1500));
     end;
-  end;
+  end else
+    print('TRSGrandExchange._returnToSummary(): Progress page was not open', TDebug.SUB);
 end;
 {$ENDIF}
 
@@ -2136,7 +2144,7 @@ begin
       if atpa[i].getBounds().getWidth() < 50 then continue();
 
       geBox := self.getBounds();
-      geBox.edit(5, 5, -5, -5);
+      geBox.edit(10, 10, -5, -5);
 
       mouseBox(atpa[i].getBounds(), MOUSE_LEFT);
       wait(randomRange(600, 1200));
