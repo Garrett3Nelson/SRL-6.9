@@ -1427,8 +1427,7 @@ begin
       mouse(backButton.rand(5), MOUSE_LEFT);
       wait(randomRange(1000, 1500));
     end;
-  end else
-    print('TRSGrandExchange._returnToSummary(): Progress page was not open', TDebug.SUB);
+  end;
 end;
 {$ENDIF}
 
@@ -2213,7 +2212,7 @@ Example:
 *)
 function TRSGrandExchange.sellItem(packSlot: integer; price, quantity: string; waitCollect: boolean = false; waitTime: integer = 10000; slotNumber : Integer = -1): boolean;
 var
-  i, nextSlot, tries, x, y, hoverCount: integer;
+  i, nextSlot, tries, x, y, hoverCount, timeout: integer;
   packBox : tBox;
   confirm: TBox := [self.x1 + 218, self.y1 + 508, self.x1 + 345, self.y1 + 526];
   offerBox : TBox := [self.x1 + 18, self.y1 + 141, self.x1 + 548, self.y1 + 535]; // The main offer screen
@@ -2306,15 +2305,27 @@ begin
 
       if waitColorCountRange(2270960, 22, colorSetting(2, 0.11, 0.48), confirm, 4000, 750, 5000) then
       begin
+        timeOut := getTickCount() + 2500;
         mouseBox(confirm, MOUSE_LEFT);
         wait(randomRange(1000, 1500));
-        if self.__isWarning() then
+
+        result:= self.__isSlotSelling(nextSlot, True);
+
+        while not result do
         begin
-          mouseBox(confirm, MOUSE_LEFT);
-          wait(randomRange(1000, 1500));
+          wait(randomRange(500, 800));
+
+          if self.__isWarning() then
+          begin
+            mouseBox(confirm, MOUSE_LEFT);
+            wait(randomRange(1000, 1500));
+          end;
+
+          result:= self.__isSlotSelling(nextSlot, True);
+          if getTickCount() > timeout then break();
         end;
 
-        break();
+        if result then break();
       end;
     end;
 
